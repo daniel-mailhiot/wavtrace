@@ -2,14 +2,29 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
+import passport from './config/passport.js';
+import authRoutes from './routes/authRoutes.js';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+// Session cookie, stored in Mongo so logins survive restarts
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Routes
-// app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', authRoutes);
 
 // Test route
 app.get('/', (req, res) => {
