@@ -1,4 +1,5 @@
 import Project from '../models/Project.js';
+import User from '../models/User.js';
 
 // POST /api/projects
 export const createProject = async (req, res) => {
@@ -56,6 +57,84 @@ export const deleteProject = async (req, res) => {
   try {
     await req.project.deleteOne();
     res.json({ message: 'Project deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// POST /api/projects/:id/members
+export const addMember = async (req, res) => {
+  try {
+    const { email, role } = req.body;
+    if (!email || !role) {
+      return res.status(400).json({ message: 'Email and role required' });
+    }
+    if (!['reviewer', 'viewer'].includes(role)) {
+      return res.status(400).json({ message: 'Role must be reviewer or viewer' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // One user, one role per project
+    const exists = req.project.members.find(
+      (m) => m.userId.toString() === user._id.toString()
+    );
+    if (exists) {
+      return res.status(409).json({ message: 'User already a member' });
+    }
+
+    req.project.members.push({ userId: user._id, role });
+    await req.project.save();
+    res.status(201).json(req.project);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// PATCH /api/projects/:id/members/:userId
+export const updateMember = async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!['reviewer', 'viewer'].includes(role)) {
+      return res.status(400).json({ message: 'Role must be reviewer or viewer' });
+    }
+
+    const member = req.project.members.find(
+      (m) => m.userId.toString() === req.params.userId
+    );
+    if (!member) {
+      return res.status(404).json({ message: 'Member not found' });
+    }
+
+    member.role = role;
+    await req.project.save();
+    res.json(req.project);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// DELETE /api/projects/:id/members/:userId
+export const removeMember = async (req, res) => {
+  try {
+    // Owner can't remove themselves
+    if (req.params.userId === req.user._id.toString()) {
+      return res.status(400).json({ message: 'Owner cannot remove themselves' });
+    }
+
+    const before = req.project.members.length;
+    req.project.members = req.project.members.filter(
+      (m) => m.userId.toString() !== req.params.userId
+    );
+    if (req.project.members.length === before) {
+      return res.status(404).json({ message: 'Member not found' });
+    }
+
+    await req.project.save();
+    res.json(req.project);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
