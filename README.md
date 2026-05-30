@@ -1,31 +1,71 @@
 # wavTrace
 
-Full-stack application with a React frontend and Express backend.
+wavTrace is a full-stack web app for audio review and revision tracking, similar concept to GitHub but designed for team-based audio deliverables instead of software development. A user uploads audio to be reviewed, the reviewer leaves timestamped notes for changes, and the user iterates based on feedback, with differences between iterations tracked using a version history pinned to the notes and feedback from each version.
 
-## Running the Backend
+## Planned features
 
-1. Open a terminal and go to the backend folder
-   cd backend
+**Versioning** - Tracks the full history of an audio project across iterations, cleanly logging who said what, when, and on which version so changes and feedback are easy to follow over time.
 
-2. Install dependencies
-   npm install
+**User accounts** - Authentication with role-based permissions (owner, reviewer, view-only).
 
-3. Create a .env file inside the backend folder:
-   PORT=5000
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_secret_key
+**Pin and region markers** - Reviewers can pin feedback to a specific timestamp or highlight a section of the track, making it clear exactly what each note is referring to.
 
-4. Start the server
-   npm run dev
+**Waveform visualization** - Visual waveform display on the timeline.
 
-## Running the Frontend
+**Metadata** - Displays audio metadata: loudness (LUFS, true peak, LRA), file specs (sample rate, bit depth, duration, format, bitrate), and clipping detection.
 
-1. Open a second terminal and go to the frontend folder
-   cd frontend
+**Auto-detected version diff** - Shows changes between versions (loudness, dynamics, duration, file specs, clipping).
 
-2. Install dependencies
-   npm install
+**Project search** - Search across projects by name.
 
-3. Start the app
-   npm run dev        (React web)
-   npx expo start     (React Native)
+**Approval** - Mark a version as "approved" or "final." Locks it from further comments and visually flags it in the version history.
+
+**DAW marker export** - Export comment timestamps as a .txt file for offline reference.
+
+
+## Project structure
+
+**Monorepo layout** (frontend/backend)
+
+```
+wavtrace/
+├── backend/
+│   ├── middleware/
+│   ├── models/
+│   │   ├── Comment.js
+│   │   ├── Project.js
+│   │   ├── User.js
+│   │   └── Version.js
+│   ├── routes/
+│   ├── .env
+│   ├── .gitignore
+│   ├── package.json
+│   ├── package-lock.json
+│   └── server.js
+├── docs/
+│   ├── architecture-diagram.excalidraw
+│   ├── architecture-diagram.png
+│   ├── architecture-diagram-light.png
+│   └── proposal.md
+├── frontend/
+│   ├── public/
+│   │   ├── favicon.svg
+│   │   └── icons.svg
+│   ├── src/
+│   │   ├── assets/
+│   │   │   ├── hero.png
+│   │   │   ├── react.svg
+│   │   │   └── vite.svg
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .gitignore
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── README.md
+│   └── vite.config.js
+└── README.md
+```
