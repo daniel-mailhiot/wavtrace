@@ -28,7 +28,7 @@ wavTrace is a full-stack web app for audio review and revision tracking, similar
 
 Testing plan as the app gets built:
 
-**API tests (Newman)** - Cover the auth and project routes, including the role-based permission rules. Test data is created and stored in a separate testing database so the real one doesnt get polluted with dummy data.
+**API tests (Newman)** - Cover the auth and project routes, including the role-based permission rules. Test data is created and stored in a separate testing database so the real one doesn't get polluted with dummy data.
 
 **Unit tests (Mocha/Chai)** - Mostly for the version diff feature since it compares a lot of audio metadata fields between versions. Each field's check has a few possible outcomes and cases like missing data or metadata that's still being processed.
 
