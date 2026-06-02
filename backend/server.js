@@ -10,6 +10,12 @@ import projectRoutes from './routes/projectRoutes.js';
 
 const app = express();
 
+// Use test DB during API tests, otherwise use real one
+const mongoUri =
+  process.env.NODE_ENV === 'test'
+    ? process.env.MONGO_URI_TEST
+    : process.env.MONGO_URI;
+
 app.use(cors());
 app.use(express.json());
 
@@ -18,7 +24,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
+  store: MongoStore.create({ mongoUrl: mongoUri }),
 }));
 
 app.use(passport.initialize());
@@ -35,8 +41,10 @@ app.get('/', (req, res) => {
 
 // Database connection
 mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
+  .connect(mongoUri)
+  .then(() =>
+    console.log(`MongoDB connected (${process.env.NODE_ENV === 'test' ? 'test' : 'dev'})`)
+  )
   .catch((err) => console.error('MongoDB connection error:', err));
 
 const PORT = process.env.PORT || 5000;
