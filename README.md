@@ -2,6 +2,7 @@
 
 wavTrace is a full-stack web app for audio review and revision tracking, similar concept to GitHub but designed for team-based audio deliverables instead of software development. A user uploads audio to be reviewed, the reviewer leaves timestamped notes for changes, and the user iterates based on feedback, with differences between iterations tracked using a version history pinned to the notes and feedback from each version.
 
+
 ## Planned features
 
 **Versioning** - Tracks the full history of an audio project across iterations, cleanly logging who said what, when, and on which version so changes and feedback are easy to follow over time.
@@ -21,6 +22,19 @@ wavTrace is a full-stack web app for audio review and revision tracking, similar
 **Approval** - Mark a version as "approved" or "final." Locks it from further comments and visually flags it in the version history.
 
 **DAW marker export** - Export comment timestamps as a .txt file for offline reference.
+
+
+## Testing
+
+Testing plan as the app gets built:
+
+**API tests (Newman)** - Cover the auth and project routes, including the role-based permission rules. Test data is created and stored in a separate testing database so the real one doesnt get polluted with dummy data.
+
+**Unit tests (Mocha/Chai)** - Mostly for the version diff feature since it compares a lot of audio metadata fields between versions. Each field's check has a few possible outcomes and cases like missing data or metadata that's still being processed.
+
+**End-to-end tests (Playwright)** - Final smoke test of main flow.
+
+**CI (if time allows)** - Run the tests on every push with GitHub Actions.
 
 
 ## Project structure
