@@ -26,15 +26,61 @@ wavTrace is a full-stack web app for audio review and revision tracking, similar
 
 ## Testing
 
-Testing plan as the app gets built:
+### API tests (Postman/Newman)
 
-**API tests (Newman)** - Cover the auth and project routes, including the role-based permission rules. Test data is created and stored in a separate testing database so the real one doesn't get polluted with dummy data.
+An API suite covering auth and project routes, including role-based permission rules. Test data is created and stored in a separate `wavtrace_test` database so the real db doesn't get polluted with dummy data.
 
-**Unit tests (Mocha/Chai)** - Mostly for the version diff feature since it compares a lot of audio metadata fields between versions. Each field's check has a few possible outcomes and cases like missing data or metadata that's still being processed.
+#### Coverage
+14 requests, 24 assertions:
 
-**End-to-end tests (Playwright)** - Final smoke test of main flow.
+- **Auth** - register, login, logout, and the session check (`/me`)
+- **Projects** - create, list, view, rename, and add members
+- **Permissions** - owner-only actions enforced by middleware
+- **Negative cases** - 401 (not logged in), 403 (wrong role), 409 (duplicate email)
 
-**CI (if time allows)** - Run the tests on every push with GitHub Actions.
+#### Passing run in Postman (24/24)
+![Postman Collection Runner results — 24 tests passing, 0 errors](docs/postman-run-summary.png)
+
+
+#### Running it in Newman CLI
+Two terminals from the `backend` folder:
+
+```bash
+# Terminal 1 - server on the test database
+npm run dev:test
+
+# Terminal 2 - run the suite
+npm run test:api
+```
+
+Requires a `MONGO_URI_TEST` value in `backend/.env`: the same Atlas connection string as `MONGO_URI`, but with `wavtrace_test` as the database name in the path.
+
+#### A passing run will look like:
+
+```
+┌─────────────────────────┬──────────┬──────────┐
+│                         │ executed │   failed │
+├─────────────────────────┼──────────┼──────────┤
+│              iterations │        1 │        0 │
+│                requests │       14 │        0 │
+│            test-scripts │       28 │        0 │
+│      prerequest-scripts │       14 │        0 │
+│              assertions │       24 │        0 │
+└─────────────────────────┴──────────┴──────────┘
+```
+
+
+### Unit tests (Mocha/Chai)
+*Not completed yet*
+- Mostly for the version diff feature since it compares a lot of audio metadata fields between versions. Each field's check has a few possible outcomes and cases like missing data or metadata that's still being processed.
+
+### End-to-end tests (Playwright)
+*Not completed yet*
+- Final smoke test of main flow.
+
+### CI (if time allows)
+*Not completed yet*
+- Run the tests on every push with GitHub Actions.
 
 
 ## Project structure
