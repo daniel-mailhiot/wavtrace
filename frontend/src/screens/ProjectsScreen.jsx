@@ -10,6 +10,7 @@ import { PlusIcon } from '../components/icons';
 import { listProjects } from '../api/projects';
 import relativeTime from '../utils/relativeTime';
 import initials from '../utils/initials';
+import CreateProjectModal from '../modals/CreateProjectModal';
 
 // Shared column widths so the header and rows line up
 const COLUMNS = '1fr 110px 130px 150px 90px';
@@ -26,6 +27,8 @@ export default function ProjectsScreen() {
   // query is the current text in the box, search copies it after a pause and is what the list filters on
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
+
+  const [createOpen, setCreateOpen] = useState(false);
 
   const myId = user?.id;
 
@@ -75,8 +78,7 @@ export default function ProjectsScreen() {
               {filtered.length} {filtered.length === 1 ? 'project' : 'projects'} · sorted by recent
             </span>
           </div>
-          {/* Create-project modal not wired up yet */}
-          <Button variant="primary">
+          <Button variant="primary" onClick={() => setCreateOpen(true)}>
             <PlusIcon /> New project
           </Button>
         </div>
@@ -155,6 +157,8 @@ export default function ProjectsScreen() {
           </div>
         )}
       </div>
+
+      {createOpen && <CreateProjectModal onClose={() => setCreateOpen(false)} />}
     </>
   );
 }
