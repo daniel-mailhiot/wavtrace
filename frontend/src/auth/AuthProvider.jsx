@@ -16,8 +16,22 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
+  
+  const register = async (fields) => {
+    setUser(await api.post('/api/auth/register', fields));
+  };
+
+  const login = async (credentials) => {
+    setUser(await api.post('/api/auth/login', credentials));
+  };
+
+  const logout = async () => {
+    await api.post('/api/auth/logout');
+    setUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, register, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
