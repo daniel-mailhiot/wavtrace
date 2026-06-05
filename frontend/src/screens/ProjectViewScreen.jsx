@@ -2,15 +2,22 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import AppBar from '../components/AppBar';
-import Button from '../components/Button';
-import Role from '../components/Role';
+import Waveform from '../components/Waveform';
+import Transport from '../components/Transport';
+import ProjectHeader from '../components/ProjectView/ProjectHeader';
+import VersionHistory from '../components/ProjectView/VersionHistory';
+import MetadataPanel from '../components/ProjectView/MetadataPanel';
+import CommentsRail from '../components/ProjectView/CommentsRail';
 import initials from '../utils/initials';
 import { getProject, deleteProject } from '../api/projects';
+import { PV_VERSIONS, PV_COMMENTS } from '../mocks/projectView';
 import RenameProjectModal from '../modals/RenameProjectModal';
 import CollaboratorsModal from '../modals/CollaboratorsModal';
 import ConfirmDialog from '../modals/ConfirmDialog';
 
-// Minimal project header for now
+// Each comment's point (t) or region becomes a numbered pin on the waveform
+const PV_MARKERS = PV_COMMENTS.map((c) => (c.region ? { region: c.region, n: c.n } : { t: c.t, n: c.n }));
+
 export default function ProjectViewScreen() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,6 +28,12 @@ export default function ProjectViewScreen() {
   const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // 'rename' | 'collab' | 'delete'
   const [deleting, setDeleting] = useState(false);
+
+  // Local UI state on mock data; real playback wiring later
+  const [playing, setPlaying] = useState(false);
+  const [activeId, setActiveId] = useState('2');
+  const [expanded, setExpanded] = useState(false);
+  const mode = 'point'; // fixed for now; becomes stateful once the waveform sets point vs region
 
   useEffect(() => {
     getProject(id)
@@ -66,35 +79,42 @@ export default function ProjectViewScreen() {
     );
   }
 
-  const collaborators = project.members.length - 1;
-
   return (
     <>
       <AppBar crumbs={['Projects', project.name]} user={initials(user?.name)} />
 
-      <div style={{ flex: 1, overflow: 'auto', padding: '30px 36px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 24 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, letterSpacing: '-0.4px' }}>{project.name}</h1>
-              {myRole && <Role role={myRole} />}
-            </div>
-            <span className="mono faint" style={{ fontSize: 13 }}>
-              {collaborators} {collaborators === 1 ? 'collaborator' : 'collaborators'}
-            </span>
-          </div>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', overflow: 'hidden' }}>
+        <div style={{ overflow: 'auto', padding: '26px 32px 40px', borderRight: '1px solid var(--line)' }}>
+          <ProjectHeader
+            project={project}
+            role={myRole}
+            isOwner={isOwner}
+            currentUserId={user?.id}
+            onMembers={() => setModal('collab')}
+            onRename={() => setModal('rename')}
+            onDelete={() => setModal('delete')}
+          />
 
-          {isOwner && (
-            <div style={{ display: 'flex', gap: 9 }}>
-              <Button onClick={() => setModal('collab')}>Members</Button>
-              <Button onClick={() => setModal('rename')}>Rename</Button>
-              <Button variant="danger" onClick={() => setModal('delete')}>Delete</Button>
-            </div>
-          )}
+          <div style={{ height: 22 }} />
+          <VersionHistory
+            versions={PV_VERSIONS}
+            expanded={expanded}
+            onToggleExpand={() => setExpanded((v) => !v)}
+            playing={playing}
+            onTogglePlay={() => setPlaying((p) => !p)}
+            onDiff={() => navigate(`/projects/${id}/diff`)}
+          />
+
+          <div style={{ height: 22 }} />
+          <Waveform seed={7} height={180} count={112} playhead={0.25} markers={PV_MARKERS} />
+          <div style={{ height: 14 }} />
+          <Transport playing={playing} onToggle={() => setPlaying((p) => !p)} />
+
+          <div style={{ height: 26 }} />
+          <MetadataPanel />
         </div>
 
-        {/* Do waveform, versions and comments later */}
-        <p className="mono faint" style={{ fontSize: 13 }}>Project workspace coming soon</p>
+        <CommentsRail activeId={activeId} onSelect={setActiveId} mode={mode} />
       </div>
 
       {modal === 'rename' && (
