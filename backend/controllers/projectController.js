@@ -96,6 +96,8 @@ export const addMember = async (req, res) => {
 
     req.project.members.push({ userId: user._id, role });
     await req.project.save();
+    // Populate name + email so the response matches the read endpoints
+    await req.project.populate('members.userId', 'name email');
     res.status(201).json(req.project);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -119,6 +121,7 @@ export const updateMember = async (req, res) => {
 
     member.role = role;
     await req.project.save();
+    await req.project.populate('members.userId', 'name email');
     res.json(req.project);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -142,6 +145,7 @@ export const removeMember = async (req, res) => {
     }
 
     await req.project.save();
+    await req.project.populate('members.userId', 'name email');
     res.json(req.project);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
