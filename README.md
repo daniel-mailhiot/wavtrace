@@ -24,6 +24,57 @@ wavTrace is a full-stack web app for audio review and revision tracking, similar
 **DAW marker export** - Export comment timestamps as a .txt file for offline reference.
 
 
+## Getting started
+
+### Prerequisites
+- Node.js (v18 or newer)
+- A MongoDB Atlas connection string
+
+### 1. Clone and install
+
+Since this is a monorepo, the `frontend` and `backend` each have their own dependencies.
+
+After cloning the repo:
+
+```bash
+# Backend
+cd backend
+npm install
+
+# Frontend
+cd ../frontend
+npm install
+```
+
+### 2. Backend environment
+
+Create a `.env` file in the `backend` folder:
+
+```bash
+MONGO_URI=your-atlas-connection-string
+SESSION_SECRET=any-long-random-string
+PORT=5000
+```
+
+For running the API tests, also add `MONGO_URI_TEST` (same connection string, but with `wavtrace_test` as the database name in the path).
+
+### 3. Run the app
+
+Two terminals:
+
+```bash
+# Terminal 1 - backend (http://localhost:5000)
+cd backend
+npm run dev
+
+# Terminal 2 - frontend (http://localhost:5173)
+cd frontend
+npm run dev
+```
+
+Open frontend URL shown in the terminal (default `http://localhost:5173`) to use the app.
+
+
 ## Testing
 
 ### API tests (Postman/Newman)
