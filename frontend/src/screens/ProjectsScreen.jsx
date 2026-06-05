@@ -27,8 +27,7 @@ export default function ProjectsScreen() {
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
 
-  // /me returns _id, login and register return id, so accept either (bandaid solution, fix later)
-  const myId = user?._id || user?.id;
+  const myId = user?.id;
 
   useEffect(() => {
     listProjects()

@@ -49,5 +49,6 @@ export const logout = (req, res) => {
 
 // GET /api/auth/me
 export const me = (req, res) => {
-  res.json(req.user);
+  const { _id, name, email } = req.user;
+  res.json({ id: _id, name, email });
 };
