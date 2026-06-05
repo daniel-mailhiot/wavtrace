@@ -24,7 +24,10 @@ export const createProject = async (req, res) => {
 // GET /api/projects
 export const listProjects = async (req, res) => {
   try {
-    const projects = await Project.find({ 'members.userId': req.user._id });
+    // Member name + email for display
+    const projects = await Project.find({ 'members.userId': req.user._id })
+      .populate('members.userId', 'name email')
+      .sort({ updatedAt: -1 });
     res.json(projects);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -32,8 +35,13 @@ export const listProjects = async (req, res) => {
 };
 
 // GET /api/projects/:id
-export const getProject = (req, res) => {
-  res.json(req.project);
+export const getProject = async (req, res) => {
+  try {
+    await req.project.populate('members.userId', 'name email');
+    res.json(req.project);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // PATCH /api/projects/:id
