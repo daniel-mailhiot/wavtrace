@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import passport from 'passport';
 import User from '../models/User.js';
 
 // POST /api/auth/register
@@ -27,8 +28,15 @@ export const register = async (req, res) => {
 };
 
 // POST /api/auth/login
-export const login = (req, res) => {
-  res.json({ id: req.user._id, name: req.user.name, email: req.user.email });
+export const login = (req, res, next) => {
+  passport.authenticate('local', (err, user) => {
+    if (err) return next(err);
+    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+    req.login(user, (loginErr) => {
+      if (loginErr) return res.status(500).json({ message: 'Server error' });
+      res.json({ id: user._id, name: user.name, email: user.email });
+    });
+  })(req, res, next);
 };
 
 // POST /api/auth/logout
@@ -41,5 +49,6 @@ export const logout = (req, res) => {
 
 // GET /api/auth/me
 export const me = (req, res) => {
-  res.json(req.user);
+  const { _id, name, email } = req.user;
+  res.json({ id: _id, name, email });
 };

@@ -1,0 +1,34 @@
+:root {
+  --board: #15161c;
+  --board-dark: #0c0d11; /* auth (login/register) screen background */
+  --panel: #1a1b22;
+  --panel-2: #1f2129;
+  --panel-3: #23252f;
+  --line: #2b2e39;
+  --line-soft: #21232b;
+
+  --head: #0f1016; /* sunken header surface: app bar + table/diff/modal headers */
+  --rail: #101116; /* side rails: comments rail, version rail */
+
+  --ink: #e6e7ec;
+  --ink-dim: #969ba8;
+  --ink-faint: #565a67;
+
+  /* UI accent, alpha variants are derived from this base */
+  --accent: #a87bff;
+  --accent-ink: #14081f; /* readable text on accent fills */
+  --accent-soft: rgba(168, 123, 255, 0.14);
+  --accent-softer: rgba(168, 123, 255, 0.07);
+  --accent-line: rgba(168, 123, 255, 0.5);
+  --accent-glow: rgba(168, 123, 255, 0.35);
+
+  --ok: #5fcf8e;   --ok-soft: rgba(95, 207, 142, 0.14);   --ok-line: rgba(95, 207, 142, 0.35);   --ok-faint: rgba(95, 207, 142, 0.08);
+  --warn: #e0b65c; --warn-soft: rgba(224, 182, 92, 0.14); --warn-line: rgba(224, 182, 92, 0.35);
+  --bad: #e0796b;  --bad-soft: rgba(224, 121, 107, 0.14); --bad-line: rgba(224, 121, 107, 0.35); --bad-faint: rgba(224, 121, 107, 0.08);
+  --rev: #9db0e8;  --rev-soft: rgba(157, 176, 232, 0.16); --rev-line: rgba(157, 176, 232, 0.42);
+
+  --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  --sans: system-ui, 'Segoe UI', Roboto, -apple-system, sans-serif;
+
+  --r-sm: 7px; --r-md: 10px; --r-lg: 14px;
+}

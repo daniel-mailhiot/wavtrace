@@ -148,7 +148,7 @@
                 "exec": [
                   "pm.test('200 ok', () => pm.response.to.have.status(200));\r",
                   "pm.test('me is owner', () =>\r",
-                  "  pm.expect(pm.response.json()._id).to.eql(pm.collectionVariables.get('ownerId')));"
+                  "  pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('ownerId')));"
                 ],
                 "type": "text/javascript",
                 "packages": {},
