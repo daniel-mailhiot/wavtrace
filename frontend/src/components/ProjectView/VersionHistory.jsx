@@ -3,47 +3,75 @@ import Pill from '../Pill';
 import Button from '../Button';
 import { CompareIcon, UploadIcon } from '../icons';
 
-function CurrentVersionRow({ version, playing, onTogglePlay, onDiff, onNewVersion }) {
+// Play pill shows on whichever version is selected
+// (remember to fix positioning selecting older versions)
+function PlayPill({ playing, onTogglePlay }) {
   return (
-    <div className="wt-vrow active">
+    <Pill
+      tone="accent"
+      style={{ cursor: 'pointer' }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onTogglePlay();
+      }}
+    >
+      {playing ? 'pause' : 'play'}
+    </Pill>
+  );
+}
+
+function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff, onNewVersion }) {
+  const isSelected = selected === version.v;
+  return (
+    <div
+      className={'wt-vrow' + (isSelected ? ' active' : '')}
+      style={isSelected ? undefined : { border: '1px solid var(--line-soft)', background: 'var(--panel-2)', cursor: 'pointer' }}
+      onClick={isSelected ? undefined : onSelect}
+    >
       <span className="wt-vbadge">{version.v}</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
-          current version ·
-          <Pill tone="accent" style={{ cursor: 'pointer' }} onClick={onTogglePlay}>
-            {playing ? 'selected' : 'play'}
-          </Pill>
+          current version
+          <Pill tone="accent" style={{ fontSize: 10 }}>latest</Pill>
+          {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />}
         </div>
         <div className="mono faint" style={{ fontSize: 11.5, marginTop: 2 }}>
           {version.when} · {version.meta}
         </div>
       </div>
-      <Button size="sm" variant="accent" onClick={onDiff}>
+      <Button size="sm" variant="accent" onClick={(e) => { e.stopPropagation(); onDiff(); }}>
         <CompareIcon /> Diff view
       </Button>
-      <Button size="sm" onClick={onNewVersion}>
+      <Button size="sm" onClick={(e) => { e.stopPropagation(); onNewVersion?.(); }}>
         <UploadIcon /> New version
       </Button>
     </div>
   );
 }
 
-function OlderVersionRow({ version }) {
+function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
+  const isSelected = selected === version.v;
   return (
-    <div className="wt-vrow" style={{ border: '1px solid var(--line-soft)', background: 'var(--panel-2)' }}>
+    <div
+      className={'wt-vrow' + (isSelected ? ' active' : '')}
+      style={isSelected ? { cursor: 'pointer' } : { border: '1px solid var(--line-soft)', background: 'var(--panel-2)', cursor: 'pointer' }}
+      onClick={onSelect}
+    >
       <span className="wt-vbadge">{version.v}</span>
       <div style={{ flex: 1 }} className="mono faint">
         <span style={{ fontSize: 12.5, color: 'var(--ink-dim)' }}>{version.who}</span>
         <span style={{ fontSize: 11.5 }}> · {version.when} · {version.meta}</span>
       </div>
+      {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />}
     </div>
   );
 }
 
-// Git-style spine with a hollow older-versions node above the accent current-version node
-export default function VersionHistory({ versions, expanded, onToggleExpand, playing, onTogglePlay, onDiff, onNewVersion }) {
-  const current = versions[0];
+// "Git" spine - clicking a version loads its clip into the waveform
+export default function VersionHistory({ versions, selected, expanded, onToggleExpand, playing, onTogglePlay, onSelectVersion, onDiff, onNewVersion }) {
+  const latest = versions[0];
   const older = versions.slice(1);
+  const latestSelected = selected === latest.v;
 
   return (
     <div>
@@ -52,7 +80,7 @@ export default function VersionHistory({ versions, expanded, onToggleExpand, pla
         {/* vertical spine connecting the nodes */}
         <div style={{ position: 'absolute', left: 9, top: 24, bottom: 30, width: 2, background: 'var(--line)' }} />
 
-        {/* older versions collapsed summary that expands */}
+        {/* older versions have collapsed summary that expands into selectable rows */}
         <div style={{ position: 'relative' }}>
           <div style={{ position: 'absolute', left: -19, top: '50%', transform: 'translateY(-50%)', width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--ink-faint)', background: 'var(--board)' }} />
           <div
@@ -73,17 +101,32 @@ export default function VersionHistory({ versions, expanded, onToggleExpand, pla
         {expanded && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
             {older.map((v) => (
-              <OlderVersionRow key={v.v} version={v} />
+              <OlderRow
+                key={v.v}
+                version={v}
+                selected={selected}
+                playing={playing}
+                onTogglePlay={onTogglePlay}
+                onSelect={() => onSelectVersion(v.v)}
+              />
             ))}
           </div>
         )}
 
         <div style={{ height: 8 }} />
 
-        {/* current version node */}
+        {/* latest version node */}
         <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 0 4px var(--accent-soft)' }} />
-          <CurrentVersionRow version={current} playing={playing} onTogglePlay={onTogglePlay} onDiff={onDiff} onNewVersion={onNewVersion} />
+          <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, borderRadius: '50%', background: latestSelected ? 'var(--accent)' : 'var(--ink-faint)', boxShadow: latestSelected ? '0 0 0 4px var(--accent-soft)' : 'none' }} />
+          <LatestRow
+            version={latest}
+            selected={selected}
+            playing={playing}
+            onTogglePlay={onTogglePlay}
+            onSelect={() => onSelectVersion(latest.v)}
+            onDiff={onDiff}
+            onNewVersion={onNewVersion}
+          />
         </div>
       </div>
     </div>

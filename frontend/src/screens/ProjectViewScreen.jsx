@@ -1,22 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import AppBar from '../components/AppBar';
 import Waveform from '../components/Waveform';
-import Transport from '../components/Transport';
 import ProjectHeader from '../components/ProjectView/ProjectHeader';
 import VersionHistory from '../components/ProjectView/VersionHistory';
 import MetadataPanel from '../components/ProjectView/MetadataPanel';
 import CommentsRail from '../components/ProjectView/CommentsRail';
 import initials from '../utils/initials';
 import { getProject, deleteProject } from '../api/projects';
-import { PV_VERSIONS, PV_COMMENTS } from '../mocks/projectView';
+import { PV_VERSIONS, PV_COMMENTS_BY_VERSION } from '../mocks/projectView';
+import v1 from '../assets/audio-demo-V1.wav';
+import v2 from '../assets/audio-demo-V2.wav';
+import v3 from '../assets/audio-demo-V3.wav';
 import RenameProjectModal from '../modals/RenameProjectModal';
 import CollaboratorsModal from '../modals/CollaboratorsModal';
 import ConfirmDialog from '../modals/ConfirmDialog';
 
-// Each comment's point (t) or region becomes a numbered pin on the waveform
-const PV_MARKERS = PV_COMMENTS.map((c) => (c.region ? { region: c.region, n: c.n } : { t: c.t, n: c.n }));
+// Temp audio
+const CLIPS = { v1, v2, v3 };
+
+const fractionOf = (c) => (c.region ? c.region[0] : c.t);
+
+// Number comments 1..N by time so pins and cards stay in sync top-to-bottom
+function numberComments(comments) {
+  return [...comments]
+    .sort((a, b) => fractionOf(a) - fractionOf(b))
+    .map((c, i) => ({ ...c, n: i + 1 }));
+}
 
 export default function ProjectViewScreen() {
   const { id } = useParams();
@@ -29,11 +40,21 @@ export default function ProjectViewScreen() {
   const [modal, setModal] = useState(null); // 'rename' | 'collab' | 'delete'
   const [deleting, setDeleting] = useState(false);
 
-  // Local UI state on mock data; real playback wiring later
+  // Review and commenting state (waveform reached through wsRef)
+  const [currentVersion, setCurrentVersion] = useState('v3');
+  const [commentsByVersion, setCommentsByVersion] = useState(PV_COMMENTS_BY_VERSION);
+  const [activeId, setActiveId] = useState(null);
+  const [draft, setDraft] = useState(null); // pending { t } or { region } from a wave click/drag
+  const [text, setText] = useState('');
   const [playing, setPlaying] = useState(false);
-  const [activeId, setActiveId] = useState('2');
+  const [duration, setDuration] = useState(0);
   const [expanded, setExpanded] = useState(false);
-  const mode = 'point'; // fixed for now; becomes stateful once the waveform sets point vs region
+  const wsRef = useRef(null);
+
+  const numberedComments = useMemo(
+    () => numberComments(commentsByVersion[currentVersion] ?? []),
+    [commentsByVersion, currentVersion]
+  );
 
   useEffect(() => {
     getProject(id)
@@ -44,6 +65,43 @@ export default function ProjectViewScreen() {
 
   const myRole = project?.members.find((m) => m.userId?._id === user?.id)?.role;
   const isOwner = myRole === 'owner';
+
+  // Waveform reports its instance once - use for play pill + seeking
+  const handleReady = useCallback((ws) => {
+    wsRef.current = ws;
+  }, []);
+
+  function selectVersion(v) {
+    if (v === currentVersion) return;
+    setCurrentVersion(v);
+    setActiveId(null);
+    setDraft(null);
+    setText('');
+  }
+
+  // On card click, highlight and seek the playhead to its time
+  function selectComment(comment) {
+    setActiveId(comment.id);
+    wsRef.current?.seekTo(fractionOf(comment));
+  }
+
+  function addComment() {
+    if (!draft || !text.trim()) return;
+    const comment = {
+      id: crypto.randomUUID(),
+      who: user?.name || 'You',
+      av: initials(user?.name),
+      text: text.trim(),
+      ...(draft.region ? { region: draft.region } : { t: draft.t }),
+    };
+    setCommentsByVersion((prev) => ({
+      ...prev,
+      [currentVersion]: [...(prev[currentVersion] ?? []), comment],
+    }));
+    setActiveId(comment.id);
+    setDraft(null);
+    setText('');
+  }
 
   async function handleDelete() {
     setDeleting(true);
@@ -98,23 +156,41 @@ export default function ProjectViewScreen() {
           <div style={{ height: 22 }} />
           <VersionHistory
             versions={PV_VERSIONS}
+            selected={currentVersion}
             expanded={expanded}
             onToggleExpand={() => setExpanded((v) => !v)}
             playing={playing}
-            onTogglePlay={() => setPlaying((p) => !p)}
+            onTogglePlay={() => wsRef.current?.playPause()}
+            onSelectVersion={selectVersion}
             onDiff={() => navigate(`/projects/${id}/diff`)}
           />
 
           <div style={{ height: 22 }} />
-          <Waveform seed={7} height={180} count={112} playhead={0.25} markers={PV_MARKERS} />
-          <div style={{ height: 14 }} />
-          <Transport playing={playing} onToggle={() => setPlaying((p) => !p)} />
+          <Waveform
+            url={CLIPS[currentVersion]}
+            comments={numberedComments}
+            activeId={activeId}
+            onReady={handleReady}
+            onPlayingChange={setPlaying}
+            onDuration={setDuration}
+            onPick={setDraft}
+            onSelect={setActiveId}
+          />
 
           <div style={{ height: 26 }} />
           <MetadataPanel />
         </div>
 
-        <CommentsRail activeId={activeId} onSelect={setActiveId} mode={mode} />
+        <CommentsRail
+          comments={numberedComments}
+          activeId={activeId}
+          duration={duration}
+          draft={draft}
+          text={text}
+          onSelect={selectComment}
+          onText={setText}
+          onSubmit={addComment}
+        />
       </div>
 
       {modal === 'rename' && (
