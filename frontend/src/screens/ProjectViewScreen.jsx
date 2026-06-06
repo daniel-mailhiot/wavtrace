@@ -59,6 +59,9 @@ export default function ProjectViewScreen() {
     [commentsByVersion, currentVersion]
   );
 
+  // Analysis state of the selected version that sets what the metadata panel shows
+  const currentStatus = versions.find((v) => v.v === currentVersion)?.status ?? 'ready';
+
   useEffect(() => {
     getProject(id)
       .then(setProject)
@@ -119,7 +122,9 @@ export default function ProjectViewScreen() {
     setText('');
   }
 
-  // Mock upload
+  // Mock upload (temp)
+  // An actual upload should start as 'processing' until the analysis backend reports back,
+  // since there's nothing to analyze yet it goes straight to 'ready'
   function handleUpload(file) {
     const v = `v${versions.length + 1}`;
     const newVersion = {
@@ -128,6 +133,7 @@ export default function ProjectViewScreen() {
       who: 'uploaded by you',
       when: 'just now',
       meta: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+      status: 'ready',
     };
     setVersions((prev) => [newVersion, ...prev]);
     setCurrentVersion(v);
@@ -175,8 +181,8 @@ export default function ProjectViewScreen() {
     <>
       <AppBar crumbs={['Projects', project.name]} user={initials(user?.name)} />
 
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', overflow: 'hidden' }}>
-        <div style={{ overflow: 'auto', padding: '26px 32px 40px', borderRight: '1px solid var(--line)' }}>
+      <div className="wt-pv">
+        <div className="wt-pv-main">
           <ProjectHeader
             project={project}
             role={myRole}
@@ -214,7 +220,7 @@ export default function ProjectViewScreen() {
           />
 
           <div style={{ height: 26 }} />
-          <MetadataPanel />
+          <MetadataPanel status={currentStatus} />
         </div>
 
         <CommentsRail

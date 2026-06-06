@@ -74,7 +74,7 @@ function AddComment({ draft, text, duration, onText, onSubmit }) {
 
 export default function CommentsRail({ comments, activeId, duration, draft, text, onSelect, onText, onSubmit }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--rail)' }}>
+    <div className="wt-pv-rail">
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
         <span style={{ fontSize: 14.5, fontWeight: 600 }}>Comments</span>
         <Pill>{comments.length}</Pill>
@@ -82,7 +82,7 @@ export default function CommentsRail({ comments, activeId, duration, draft, text
         <span className="mono faint" style={{ fontSize: 11.5 }}>by time ▾</span>
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 9 }}>
+      <div className="wt-pv-rail-list" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 9 }}>
         {comments.map((c) => (
           <CommentCard
             key={c.id}
