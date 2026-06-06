@@ -64,6 +64,7 @@ Atom classes (all screens reuse)
 .wt-btn.full { width: 100%; }
 .wt-btn.danger { color: var(--bad); border-color: var(--bad-line); }
 .wt-btn.danger:hover { background: var(--bad-soft); }
+.wt-btn:disabled { opacity: 0.5; pointer-events: none; }
 .wt-ico-sq { width: 13px; height: 13px; border-radius: 3px; background: currentColor; opacity: 0.55; }
 
 /* Form fields */
@@ -121,18 +122,12 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-stat .v.ok { color: var(--ok); } .wt-stat .v.bad { color: var(--bad); }
 .wt-stat .v.warn { color: var(--warn); } .wt-stat .v.accent { color: var(--accent); }
 
-/* Waveform */
-.wt-wave { position: relative; background: var(--panel-2); border: 1px solid var(--line);
+/* Waveform (min-height matches the height passed to wavesurfer, avoids a load jump) */
+.wt-wave { position: relative; min-height: 180px; background: var(--panel-2); border: 1px solid var(--line);
   border-radius: var(--r-md); overflow: hidden; }
-.wt-bars { position: absolute; inset: 0; display: flex; align-items: center; gap: var(--bar-gap, 2px); padding: 0 12px; }
-.wt-bar { flex: 1; min-width: 1px; background: var(--ink-faint); border-radius: 1.5px; opacity: 0.55; }
-.wt-bar.on { background: var(--accent); opacity: 1; }
-.wt-playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent);
-  box-shadow: 0 0 10px var(--accent-glow); z-index: 3; }
-.wt-playhead::after { content: ''; position: absolute; top: -4px; left: -4px; width: 10px; height: 10px;
-  border-radius: 50%; background: var(--accent); }
-.wt-region { position: absolute; top: 0; bottom: 0; background: var(--accent-soft);
-  border-left: 1.5px dashed var(--accent-line); border-right: 1.5px dashed var(--accent-line); z-index: 2; }
+/* wavesurfer renders into a shadow DOM, so its cursor + regions are styled via ::part */
+.wt-wave ::part(cursor) { box-shadow: 0 0 10px var(--accent-glow); }
+.wt-wave ::part(region) { border-left: 1.5px dashed var(--accent-line); border-right: 1.5px dashed var(--accent-line); }
 .wt-wave-wrap { position: relative; }
 .wt-mk-rail { position: relative; height: 24px; margin-bottom: 7px; }
 .wt-mk { position: absolute; bottom: 0; width: 20px; height: 20px; border-radius: 50%;
@@ -143,6 +138,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
   width: 1.5px; height: 7px; background: var(--accent-line); }
 .wt-mk.region { border-radius: 5px; transform: none; }
 .wt-mk.region::after { left: 50%; transform: translateX(-50%); }
+.wt-mk.active { box-shadow: 0 0 0 3px var(--accent-soft), 0 2px 8px rgba(0, 0, 0, 0.5); }
 
 /* Transport */
 .wt-transport { display: flex; align-items: center; gap: 9px; }
