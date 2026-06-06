@@ -22,7 +22,7 @@ const CLIPS = { v1, v2, v3 };
 
 const fractionOf = (c) => (c.region ? c.region[0] : c.t);
 
-// Number comments 1..N by time so pins and cards stay in sync top-to-bottom
+// Number comments by time so pins and cards stay in sync top to bottom
 function numberComments(comments) {
   return [...comments]
     .sort((a, b) => fractionOf(a) - fractionOf(b))
@@ -62,6 +62,19 @@ export default function ProjectViewScreen() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Spacebar play/pause (not while typing a comment)
+  useEffect(() => {
+    function onKey(e) {
+      if (e.code !== 'Space' || e.repeat) return;
+      const tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'BUTTON' || e.target.isContentEditable) return;
+      e.preventDefault();
+      wsRef.current?.playPause();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const myRole = project?.members.find((m) => m.userId?._id === user?.id)?.role;
   const isOwner = myRole === 'owner';

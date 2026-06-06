@@ -33,10 +33,10 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
         <div style={{ fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
           <span className="mono">{version.file}</span>
           <Pill tone="ok" style={{ fontSize: 10 }}>latest</Pill>
-          {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />}
+          {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */}
         </div>
         <div className="mono faint" style={{ fontSize: 11.5, marginTop: 2 }}>
-          {version.when} · {version.meta}
+          {version.who} {version.when} · {version.meta}
         </div>
       </div>
       <Button size="sm" variant="accent" onClick={(e) => { e.stopPropagation(); onDiff(); }}>
@@ -60,14 +60,14 @@ function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
       <span className="wt-vbadge">{version.v}</span>
       <div style={{ flex: 1 }} className="mono faint">
         <span style={{ fontSize: 12.5, color: 'var(--ink-dim)' }}>{version.file}</span>
-        <span style={{ fontSize: 11.5 }}> · {version.who} · {version.when} · {version.meta}</span>
+        <span style={{ fontSize: 11.5 }}> · {version.who} {version.when} · {version.meta}</span>
       </div>
       {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />}
     </div>
   );
 }
 
-// "Git" spine - clicking a version loads its clip into the waveform
+// Git spine - clicking a version loads its clip into the waveform
 export default function VersionHistory({ versions, selected, expanded, onToggleExpand, playing, onTogglePlay, onSelectVersion, onDiff, onNewVersion }) {
   const latest = versions[0];
   const older = versions.slice(1);

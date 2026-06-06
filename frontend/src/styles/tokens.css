@@ -10,9 +10,9 @@
   --head: #0f1016; /* sunken header surface: app bar + table/diff/modal headers */
   --rail: #101116; /* side rails: comments rail, version rail */
 
-  --ink: #e6e7ec;
-  --ink-dim: #969ba8;
-  --ink-faint: #565a67;
+  --ink: #f2f2f2;
+  --ink-dim: #d0d2d7;
+  --ink-faint: #9da2b8;
 
   /* UI accent, alpha variants are derived from this base */
   --accent: #a87bff;
