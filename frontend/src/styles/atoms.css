@@ -90,7 +90,9 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 
 .wt-select { font-family: var(--mono); font-size: 13px; color: var(--ink-dim);
   border: 1px solid var(--line); background: var(--panel-2); border-radius: var(--r-sm);
-  padding: 0 12px; height: 38px; cursor: pointer; }
+  padding: 0 12px; height: 38px; cursor: pointer; transition: 0.14s ease; }
+.wt-select:hover { border-color: var(--accent-line); color: var(--ink); }
+.wt-select:focus { outline: none; border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-softer); }
 
 /* Pills/tags */
 .wt-pill { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono);
@@ -193,4 +195,40 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 /* thin custom scrollbar inside dark panels */
 .wt ::-webkit-scrollbar { width: 10px; height: 10px; }
 .wt ::-webkit-scrollbar-thumb { background: var(--panel-3); border-radius: 6px; border: 2px solid var(--board); }
+.wt ::-webkit-scrollbar-thumb:hover { background: var(--line); }
 .wt ::-webkit-scrollbar-track { background: transparent; }
+/* Firefox equivalent (inherited by scrolling descendants) */
+.wt { scrollbar-width: thin; scrollbar-color: var(--panel-3) transparent; }
+
+/* Loading spinner */
+.wt-spinner { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line);
+  border-top-color: var(--accent); animation: wt-spin 0.7s linear infinite; }
+@keyframes wt-spin { to { transform: rotate(360deg); } }
+
+/*
+Responsive layout
+No mobile design yet, so narrow widths just collapse the side rails into a
+single stacked column. These are in classes (not inline styles) so the media
+queries can override them
+*/
+
+/* Project view: main column + comments rail, stacks below ~900px */
+.wt-pv { flex: 1; display: grid; grid-template-columns: 1fr 360px; overflow: hidden; }
+.wt-pv-main { overflow: auto; padding: 26px 32px 40px; border-right: 1px solid var(--line); }
+.wt-pv-rail { display: flex; flex-direction: column; overflow: hidden; background: var(--rail); }
+.wt-pv-rail-list { flex: 1; overflow: auto; }
+@media (max-width: 900px) {
+  .wt-pv { grid-template-columns: 1fr; overflow: auto; }
+  .wt-pv-main { overflow: visible; border-right: none; border-bottom: 1px solid var(--line); }
+  .wt-pv-rail { overflow: visible; }
+  .wt-pv-rail-list { flex: none; overflow: visible; }
+}
+
+/* Diff: waveforms + summary cards, stacks below ~820px */
+.wt-diff-top { display: grid; grid-template-columns: 1fr 300px; gap: 22px; margin-top: 24px; align-items: stretch; }
+@media (max-width: 820px) { .wt-diff-top { grid-template-columns: 1fr; } }
+
+/* Metadata hero strip: 4-up, drops to 2-up below ~1100px */
+.wt-meta-hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line-soft);
+  border: 1px solid var(--line-soft); border-radius: var(--r-sm); overflow: hidden; }
+@media (max-width: 1100px) { .wt-meta-hero { grid-template-columns: repeat(2, 1fr); } }
