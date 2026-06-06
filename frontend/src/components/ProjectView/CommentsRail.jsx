@@ -1,11 +1,20 @@
 import Pill from '../Pill';
 import Button from '../Button';
 import { Avatar } from '../Avatar';
-import { PV_COMMENTS } from '../../mocks/projectView';
+import formatTime from '../../utils/formatTime';
 
-// Each comment has a numbered node (circle for points, rounded square for regions), author, timecode and text
-function CommentCard({ comment, active, onClick }) {
+// Comment's fraction to timecode, range for regions
+function timecode(comment, duration) {
+  if (comment.region) {
+    return `${formatTime(comment.region[0] * duration)}–${formatTime(comment.region[1] * duration)}`;
+  }
+  return formatTime(comment.t * duration);
+}
+
+// Numbered node (circle for points, rounded square for regions)
+function CommentCard({ comment, active, duration, onClick }) {
   const isRegion = Boolean(comment.region);
+  const time = timecode(comment, duration);
   return (
     <div className={'wt-comment' + (active ? ' active' : '')} onClick={onClick}>
       <div className={'wt-cn' + (isRegion ? ' region' : '')}>{comment.n}</div>
@@ -14,7 +23,7 @@ function CommentCard({ comment, active, onClick }) {
           <Avatar size={20}>{comment.av}</Avatar>
           <span className="wt-cwho">{comment.who}</span>
           <Pill tone="accent" style={{ marginLeft: 'auto' }}>
-            {isRegion ? comment.time : '@ ' + comment.time}
+            {isRegion ? time : '@ ' + time}
           </Pill>
         </div>
         <div className="wt-ctext">{comment.text}</div>
@@ -23,45 +32,70 @@ function CommentCard({ comment, active, onClick }) {
   );
 }
 
-// Composer shows the point/region selection, an input and the Comment button
-// (Selection mode is static for now, later it should follow waveform clicks and drags)
-function AddComment({ mode }) {
-  const isRegion = mode === 'region';
-  const detail = isRegion ? '1:20–1:38' : '0:48';
+// Disabled until a point or region is picked on the waveform
+function AddComment({ draft, text, duration, onText, onSubmit }) {
+  const hasDraft = Boolean(draft);
+  const isRegion = Boolean(draft?.region);
+  const detail = !hasDraft
+    ? ''
+    : isRegion
+    ? `${formatTime(draft.region[0] * duration)}–${formatTime(draft.region[1] * duration)}`
+    : formatTime(draft.t * duration);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-      <Pill tone="accent" style={{ padding: '6px 11px', fontSize: 12, gap: 7, alignSelf: 'flex-start' }}>
-        <span className="wt-dot" style={{ borderRadius: isRegion ? 2 : '50%' }} />
-        {isRegion ? 'Region' : 'Point'}
-        <span className="mono" style={{ opacity: 0.7 }}>{detail}</span>
-      </Pill>
+      {hasDraft && (
+        <Pill tone="accent" style={{ padding: '6px 11px', fontSize: 12, gap: 7, alignSelf: 'flex-start' }}>
+          {isRegion ? 'Region' : 'Point'}
+          <span className="mono" style={{ opacity: 0.7 }}>{detail}</span>
+        </Pill>
+      )}
       <div className="wt-search" style={{ height: 40 }}>
-        <input placeholder={isRegion ? 'Add feedback on 1:20–1:38…' : 'Add feedback @ 0:48…'} />
+        <input
+          value={text}
+          disabled={!hasDraft}
+          onChange={(e) => onText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
+          placeholder={
+            hasDraft
+              ? isRegion
+                ? `Add feedback on ${detail}…`
+                : `Add feedback @ ${detail}…`
+              : 'Click or drag the waveform to comment…'
+          }
+        />
       </div>
-      <Button variant="primary" full>Comment</Button>
+      <Button variant="primary" full disabled={!hasDraft || !text.trim()} onClick={onSubmit}>
+        Comment
+      </Button>
     </div>
   );
 }
 
-// Right rail with the count header, scrolling card list and composer footer
-export default function CommentsRail({ activeId, onSelect, mode }) {
+export default function CommentsRail({ comments, activeId, duration, draft, text, onSelect, onText, onSubmit }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--rail)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
         <span style={{ fontSize: 14.5, fontWeight: 600 }}>Comments</span>
-        <Pill>{PV_COMMENTS.length}</Pill>
+        <Pill>{comments.length}</Pill>
         <span className="wt-grow" />
         <span className="mono faint" style={{ fontSize: 11.5 }}>by time ▾</span>
       </div>
 
       <div style={{ flex: 1, overflow: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 9 }}>
-        {PV_COMMENTS.map((c) => (
-          <CommentCard key={c.n} comment={c} active={activeId === c.n} onClick={() => onSelect(c.n)} />
+        {comments.map((c) => (
+          <CommentCard
+            key={c.id}
+            comment={c}
+            active={activeId === c.id}
+            duration={duration}
+            onClick={() => onSelect(c)}
+          />
         ))}
       </div>
 
       <div style={{ padding: 16, borderTop: '1px solid var(--line)' }}>
-        <AddComment mode={mode} />
+        <AddComment draft={draft} text={text} duration={duration} onText={onText} onSubmit={onSubmit} />
       </div>
     </div>
   );
