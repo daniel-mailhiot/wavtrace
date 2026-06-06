@@ -8,7 +8,7 @@ import DiffWaveform from '../components/DiffWaveform';
 import { CompareIcon } from '../components/icons';
 import initials from '../utils/initials';
 import { getProject } from '../api/projects';
-import { DIFF_VERSIONS, computeDiff } from '../mocks/diff';
+import { DIFF_VERSIONS, computeDiff, isAnalyzed } from '../mocks/diff';
 import v1 from '../assets/audio-demo-V1.wav';
 import v2 from '../assets/audio-demo-V2.wav';
 import v3 from '../assets/audio-demo-V3.wav';
@@ -41,14 +41,26 @@ function VersionSelect({ value, onChange, accent = false }) {
   );
 }
 
-function VsHeader({ aVer, bVer, onA, onB }) {
+function VsHeader({ aVer, bVer, onA, onB, pending }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <VersionSelect value={aVer} onChange={onA} />
       <span className="mono faint" style={{ fontSize: 16 }}>→</span>
       <VersionSelect value={bVer} onChange={onB} accent />
       <span className="wt-grow" />
-      <Pill tone="ok">both analyzed</Pill>
+      {pending ? <Pill tone="warn">analysis pending</Pill> : <Pill tone="ok">both analyzed</Pill>}
+    </div>
+  );
+}
+
+// Metadata diff needs both sides analyzed so this is use until then
+function PendingDiff({ version }) {
+  return (
+    <div className="wt-card" style={{ padding: '30px 18px', textAlign: 'center' }}>
+      <div style={{ fontSize: 14, fontWeight: 600 }}>{version} is still being analyzed</div>
+      <div className="mono faint" style={{ fontSize: 12, marginTop: 7 }}>
+        The metadata diff appears once both versions have finished analysis
+      </div>
     </div>
   );
 }
@@ -149,7 +161,9 @@ export default function DiffScreen() {
     getProject(id).then(setProject).catch(() => {});
   }, [id]);
 
-  const rows = computeDiff(aVer, bVer);
+  // Waveforms are peak data but metadata diff needs both sides analyzed
+  const pendingVer = !isAnalyzed(bVer) ? bVer : !isAnalyzed(aVer) ? aVer : null;
+  const rows = pendingVer ? [] : computeDiff(aVer, bVer);
   const fileName = `${slug(project?.name)}.metadata`;
 
   return (
@@ -160,9 +174,9 @@ export default function DiffScreen() {
       />
 
       <div style={{ flex: 1, overflow: 'auto', padding: '28px 30px 40px' }}>
-        <VsHeader aVer={aVer} bVer={bVer} onA={setAVer} onB={setBVer} />
+        <VsHeader aVer={aVer} bVer={bVer} onA={setAVer} onB={setBVer} pending={Boolean(pendingVer)} />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 22, marginTop: 24, alignItems: 'stretch' }}>
+        <div className="wt-diff-top">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
             <div>
               <Eyebrow style={{ marginBottom: 8 }}>
@@ -178,15 +192,18 @@ export default function DiffScreen() {
             </div>
           </div>
 
-          <SummaryCards aVer={aVer} bVer={bVer} rows={rows} />
+          {pendingVer ? <PendingDiff version={pendingVer} /> : <SummaryCards aVer={aVer} bVer={bVer} rows={rows} />}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '30px 0 12px' }}>
-          <Eyebrow>Full metadata diff</Eyebrow>
-          <span className="wt-divsoft" style={{ flex: 1 }} />
-        </div>
-
-        <UnifiedDiff fileName={fileName} aVer={aVer} bVer={bVer} rows={rows} />
+        {!pendingVer && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '30px 0 12px' }}>
+              <Eyebrow>Full metadata diff</Eyebrow>
+              <span className="wt-divsoft" style={{ flex: 1 }} />
+            </div>
+            <UnifiedDiff fileName={fileName} aVer={aVer} bVer={bVer} rows={rows} />
+          </>
+        )}
       </div>
     </>
   );

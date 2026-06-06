@@ -2,10 +2,13 @@
 // backends don't exist yet, so these are stand-ins
 
 // Newest first; v3 is the current version
+// status is the analysis state (ready | processing | failed) the panel reads
+// it's hard-coded ready rn because the analysis backend isn't built yet, once I
+// do it, status + the metrics below come from the analysis result per version
 export const PV_VERSIONS = [
-  { v: 'v3', file: 'audio-demo-V3.wav', who: 'uploaded by you', when: '2d ago', meta: '0:12 · 8.4 MB' },
-  { v: 'v2', file: 'audio-demo-V2.wav', who: 'uploaded by you', when: '6d ago', meta: '0:10 · 8.1 MB' },
-  { v: 'v1', file: 'audio-demo-V1.wav', who: 'uploaded by you', when: '2w ago', meta: '0:09 · 7.9 MB' },
+  { v: 'v3', file: 'audio-demo-V3.wav', who: 'uploaded by you', when: '2d ago', meta: '0:12 · 8.4 MB', status: 'ready' },
+  { v: 'v2', file: 'audio-demo-V2.wav', who: 'uploaded by you', when: '6d ago', meta: '0:10 · 8.1 MB', status: 'ready' },
+  { v: 'v1', file: 'audio-demo-V1.wav', who: 'uploaded by you', when: '2w ago', meta: '0:09 · 7.9 MB', status: 'ready' },
 ];
 
 // Comments per version so so switching swaps data

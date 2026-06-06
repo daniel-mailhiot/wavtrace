@@ -4,6 +4,12 @@
 // Newest last so older to newer reads left to right
 export const DIFF_VERSIONS = ['v1', 'v2', 'v3'];
 
+// Whether each version's analysis has finished; all true until the analysis
+// backend exists, once it does a freshly uploaded version reads false here
+// until its result comes back, and the diff falls back to a pending state
+const ANALYZED = { v1: true, v2: true, v3: true };
+export const isAnalyzed = (ver) => ANALYZED[ver] ?? false;
+
 // v3 matches the project view metadata panel so the two screens agree
 const VERSION_META = {
   v1: { loudness: -18.3, duration: 205, truePeak: 1.4, lra: 9.6, clipping: true, size: 7.9, bitrate: 2.1, sampleRate: '48 kHz', bitDepth: '24-bit', format: 'WAV' },

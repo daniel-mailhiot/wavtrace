@@ -2,7 +2,7 @@ import Eyebrow from '../Eyebrow';
 import Pill from '../Pill';
 import { PV_LOUDNESS, PV_FILE } from '../../mocks/projectView';
 
-// Meter placing loudness in a -30..-6 LUFS window with a target of -14
+// Meter placing loudness in a -30 to -6 LUFS window with a target of -14
 function LoudnessMeter({ value }) {
   const pct = (v) => ((v - -30) / (-6 - -30)) * 100;
   return (
@@ -24,8 +24,24 @@ function LeaderRow({ label, value }) {
   );
 }
 
-// Loudness-forward metadata shown as a 4-up hero strip over the file readout
-export default function MetadataPanel() {
+const STATUS_PILL = {
+  ready: { tone: 'ok', label: 'ready' },
+  processing: { tone: 'warn', label: 'processing' },
+  failed: { tone: 'bad', label: 'failed' },
+};
+
+// Shown in place of metrics while analysis is running or after it errored
+function StatePanel({ title, detail, bad }) {
+  return (
+    <div className="wt-card-2" style={{ padding: '26px 18px', textAlign: 'center' }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: bad ? 'var(--bad)' : 'var(--ink)' }}>{title}</div>
+      <div className="mono faint" style={{ fontSize: 12, marginTop: 7 }}>{detail}</div>
+    </div>
+  );
+}
+
+// PV_LOUDNESS is temp
+function ReadyMetrics() {
   const { loudness, truePeak, lra } = PV_LOUDNESS;
   const heroes = [
     { k: 'Loudness', v: loudness, u: 'LUFS', meter: true },
@@ -35,12 +51,8 @@ export default function MetadataPanel() {
   ];
 
   return (
-    <div>
-      <Eyebrow style={{ marginBottom: 12 }}>
-        Audio metadata <Pill tone="ok">ready</Pill>
-      </Eyebrow>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 1, background: 'var(--line-soft)', border: '1px solid var(--line-soft)', borderRadius: 'var(--r-sm)', overflow: 'hidden' }}>
+    <>
+      <div className="wt-meta-hero">
         {heroes.map((h) => (
           <div key={h.k} style={{ background: 'var(--panel-2)', padding: '14px 16px' }}>
             <div className="faint mono" style={{ fontSize: 10.5, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{h.k}</div>
@@ -71,6 +83,26 @@ export default function MetadataPanel() {
           ))}
         </div>
       </div>
+    </>
+  );
+}
+
+export default function MetadataPanel({ status = 'ready' }) {
+  const badge = STATUS_PILL[status] ?? STATUS_PILL.ready;
+
+  return (
+    <div>
+      <Eyebrow style={{ marginBottom: 12 }}>
+        Audio metadata <Pill tone={badge.tone}>{badge.label}</Pill>
+      </Eyebrow>
+
+      {status === 'processing' && (
+        <StatePanel title="Analyzing audio…" detail="Loudness, peak and file specs appear once analysis finishes" />
+      )}
+      {status === 'failed' && (
+        <StatePanel bad title="Couldn't analyze this file" detail="Re-upload the version to run analysis again" />
+      )}
+      {status !== 'processing' && status !== 'failed' && <ReadyMetrics />}
     </div>
   );
 }
