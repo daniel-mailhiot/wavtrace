@@ -183,6 +183,7 @@ export default function ProjectViewScreen() {
             url={CLIPS[currentVersion]}
             comments={numberedComments}
             activeId={activeId}
+            draft={draft}
             onReady={handleReady}
             onPlayingChange={setPlaying}
             onDuration={setDuration}

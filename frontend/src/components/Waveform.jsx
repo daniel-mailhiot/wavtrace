@@ -14,6 +14,7 @@ export default function Waveform({
   url,
   comments = [],
   activeId,
+  draft,
   onReady,
   onPlayingChange,
   onDuration,
@@ -113,7 +114,7 @@ export default function Waveform({
 
   return (
     <div className="wt-wave-wrap">
-      {comments.length > 0 && (
+      {(comments.length > 0 || draft) && (
         <div className="wt-mk-rail">
           {comments.map((c) => {
             const isRegion = Boolean(c.region);
@@ -132,6 +133,14 @@ export default function Waveform({
               </div>
             );
           })}
+
+          {/* Pending comment indicator for spot clicked before its comment is saved */}
+          {draft && (
+            <div
+              className={'wt-mk draft' + (draft.region ? ' region' : '')}
+              style={{ left: draft.region ? `calc(${draft.region[0] * 100}% + 5px)` : `${draft.t * 100}%` }}
+            />
+          )}
         </div>
       )}
 

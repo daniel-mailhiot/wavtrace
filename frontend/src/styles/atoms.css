@@ -139,6 +139,9 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-mk.region { border-radius: 5px; transform: none; }
 .wt-mk.region::after { left: 50%; transform: translateX(-50%); }
 .wt-mk.active { box-shadow: 0 0 0 3px var(--accent-soft), 0 2px 8px rgba(0, 0, 0, 0.5); }
+/* Empty placeholder marker that pulses until its comment is saved */
+.wt-mk.draft { pointer-events: none; animation: wt-mk-blink 1.1s ease-in-out infinite; }
+@keyframes wt-mk-blink { 50% { opacity: 0.3; } }
 
 /* Transport */
 .wt-transport { display: flex; align-items: center; gap: 9px; }
