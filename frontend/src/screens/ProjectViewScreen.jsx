@@ -16,9 +16,11 @@ import v3 from '../assets/audio-demo-V3.wav';
 import RenameProjectModal from '../modals/RenameProjectModal';
 import CollaboratorsModal from '../modals/CollaboratorsModal';
 import ConfirmDialog from '../modals/ConfirmDialog';
+import UploadVersionModal from '../modals/UploadVersionModal';
 
-// Temp audio
+// Temp audio, uploaded versions reuse the latest clip since there's no upload backend yet...
 const CLIPS = { v1, v2, v3 };
+const clipFor = (v) => CLIPS[v] || v3;
 
 const fractionOf = (c) => (c.region ? c.region[0] : c.t);
 
@@ -41,6 +43,7 @@ export default function ProjectViewScreen() {
   const [deleting, setDeleting] = useState(false);
 
   // Review and commenting state (waveform reached through wsRef)
+  const [versions, setVersions] = useState(PV_VERSIONS);
   const [currentVersion, setCurrentVersion] = useState('v3');
   const [commentsByVersion, setCommentsByVersion] = useState(PV_COMMENTS_BY_VERSION);
   const [activeId, setActiveId] = useState(null);
@@ -116,6 +119,24 @@ export default function ProjectViewScreen() {
     setText('');
   }
 
+  // Mock upload
+  function handleUpload(file) {
+    const v = `v${versions.length + 1}`;
+    const newVersion = {
+      v,
+      file: file.name,
+      who: 'uploaded by you',
+      when: 'just now',
+      meta: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+    };
+    setVersions((prev) => [newVersion, ...prev]);
+    setCurrentVersion(v);
+    setActiveId(null);
+    setDraft(null);
+    setText('');
+    setModal(null);
+  }
+
   async function handleDelete() {
     setDeleting(true);
     try {
@@ -168,7 +189,7 @@ export default function ProjectViewScreen() {
 
           <div style={{ height: 22 }} />
           <VersionHistory
-            versions={PV_VERSIONS}
+            versions={versions}
             selected={currentVersion}
             expanded={expanded}
             onToggleExpand={() => setExpanded((v) => !v)}
@@ -176,11 +197,12 @@ export default function ProjectViewScreen() {
             onTogglePlay={() => wsRef.current?.playPause()}
             onSelectVersion={selectVersion}
             onDiff={() => navigate(`/projects/${id}/diff`)}
+            onNewVersion={() => setModal('upload')}
           />
 
           <div style={{ height: 22 }} />
           <Waveform
-            url={CLIPS[currentVersion]}
+            url={clipFor(currentVersion)}
             comments={numberedComments}
             activeId={activeId}
             draft={draft}
@@ -220,6 +242,15 @@ export default function ProjectViewScreen() {
           project={project}
           onClose={() => setModal(null)}
           onMembersChanged={(members) => setProject((p) => ({ ...p, members }))}
+        />
+      )}
+
+      {modal === 'upload' && (
+        <UploadVersionModal
+          versions={versions}
+          projectName={project.name}
+          onClose={() => setModal(null)}
+          onUpload={handleUpload}
         />
       )}
 
