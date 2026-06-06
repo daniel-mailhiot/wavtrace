@@ -173,8 +173,6 @@ export default function CollaboratorsModal({ project, onClose, onMembersChanged 
                 );
               })}
             </div>
-
-            <div className="note" style={{ marginTop: 16 }}>add by email · primary owner can't edit self</div>
           </div>
         </div>
 

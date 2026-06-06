@@ -3,8 +3,6 @@ import Pill from '../Pill';
 import Button from '../Button';
 import { CompareIcon, UploadIcon } from '../icons';
 
-// Play pill shows on whichever version is selected
-// (remember to fix positioning selecting older versions)
 function PlayPill({ playing, onTogglePlay }) {
   return (
     <Pill
@@ -33,7 +31,7 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
         <div style={{ fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
           <span className="mono">{version.file}</span>
           <Pill tone="ok" style={{ fontSize: 10 }}>latest</Pill>
-          {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */}
+          {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />}
         </div>
         <div className="mono faint" style={{ fontSize: 11.5, marginTop: 2 }}>
           {version.who} {version.when} · {version.meta}
@@ -49,7 +47,7 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
   );
 }
 
-function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
+function OlderRow({ version, selected, onSelect }) {
   const isSelected = selected === version.v;
   return (
     <div
@@ -62,7 +60,6 @@ function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
         <span style={{ fontSize: 12.5, color: 'var(--ink-dim)' }}>{version.file}</span>
         <span style={{ fontSize: 11.5 }}> · {version.who} {version.when}</span>
       </div>
-      {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */}
       <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>{version.meta}</span>
     </div>
   );
@@ -106,8 +103,6 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
                 key={v.v}
                 version={v}
                 selected={selected}
-                playing={playing}
-                onTogglePlay={onTogglePlay}
                 onSelect={() => onSelectVersion(v.v)}
               />
             ))}
