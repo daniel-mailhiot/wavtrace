@@ -1,12 +1,192 @@
+import { Fragment, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 import AppBar from '../components/AppBar';
+import Eyebrow from '../components/Eyebrow';
+import Pill from '../components/Pill';
+import DiffWaveform from '../components/DiffWaveform';
+import { CompareIcon } from '../components/icons';
+import initials from '../utils/initials';
+import { getProject } from '../api/projects';
+import { DIFF_VERSIONS, computeDiff } from '../mocks/diff';
+import v1 from '../assets/audio-demo-V1.wav';
+import v2 from '../assets/audio-demo-V2.wav';
+import v3 from '../assets/audio-demo-V3.wav';
 
-// Placeholder for the version diff
-export default function DiffScreen() {
+const CLIPS = { v1, v2, v3 };
+
+const TONE_COLOR = {
+  accent: 'var(--accent)',
+  ok: 'var(--ok)',
+  dim: 'var(--ink-dim)',
+  bad: 'var(--bad)',
+  faint: 'var(--ink-faint)',
+};
+
+// unified-diff field name ('True peak' -> 'true_peak')
+const fieldKey = (k) => k.toLowerCase().replace(' ', '_');
+const slug = (s) => (s || 'project').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+// Version picker, newer side is accent tinted
+function VersionSelect({ value, onChange, accent = false }) {
+  const accentStyle = accent
+    ? { color: 'var(--accent)', borderColor: 'var(--accent-line)', background: 'var(--accent-soft)' }
+    : undefined;
+  return (
+    <select className="wt-select" value={value} onChange={(e) => onChange(e.target.value)} style={accentStyle}>
+      {DIFF_VERSIONS.map((v) => (
+        <option key={v} value={v}>{v}</option>
+      ))}
+    </select>
+  );
+}
+
+function VsHeader({ aVer, bVer, onA, onB }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <VersionSelect value={aVer} onChange={onA} />
+      <span className="mono faint" style={{ fontSize: 16 }}>→</span>
+      <VersionSelect value={bVer} onChange={onB} accent />
+      <span className="wt-grow" />
+      <Pill tone="ok">both analyzed</Pill>
+    </div>
+  );
+}
+
+// Shared stat row for one metric in both summary cards
+function MetricLine({ children, color }) {
+  return (
+    <div style={{ fontFamily: 'var(--mono)', fontSize: 18, color, marginBottom: 12, display: 'flex', alignItems: 'baseline', gap: 7, flexWrap: 'wrap' }}>
+      {children}
+    </div>
+  );
+}
+
+// Two stacked cards, baseline values then newer one with its deltas
+function SummaryCards({ aVer, bVer, rows }) {
+  const heroes = rows.slice(0, 4);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="wt-card-2" style={{ padding: 16 }}>
+        <div className="mono faint" style={{ fontSize: 12, marginBottom: 12 }}>{aVer}</div>
+        {heroes.map((r) => (
+          <MetricLine key={r.k} color={r.flagA ? 'var(--bad)' : 'var(--ink)'}>
+            {r.aVal} <small style={{ fontSize: 11, color: 'var(--ink-faint)' }}>{r.unit}</small>
+          </MetricLine>
+        ))}
+      </div>
+      <div className="wt-card-2" style={{ padding: 16 }}>
+        <div className="mono faint" style={{ fontSize: 12, marginBottom: 12 }}>{bVer} <span style={{ color: 'var(--ink-faint)' }}>vs {aVer}</span></div>
+        {heroes.map((r) => (
+          <MetricLine key={r.k} color={r.changed ? TONE_COLOR[r.tone] : 'var(--ink)'}>
+            {r.bVal} <small style={{ fontSize: 11, color: 'var(--ink-faint)' }}>{r.unit}</small>
+            {r.changed && <small style={{ fontSize: 11.5, color: 'var(--ink-dim)' }}>{r.delta}</small>}
+          </MetricLine>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// One field rendered as either context or a -/+ pair
+function DiffLine({ row }) {
+  const join = (val) => `${fieldKey(row.k)}: ${val}${row.unit ? ' ' + row.unit : ''}`;
+
+  if (!row.changed) {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr', fontSize: 13, color: 'var(--ink-faint)' }}>
+        <span style={{ textAlign: 'center', opacity: 0.5 }}> </span>
+        <span style={{ padding: '5px 12px' }}>&nbsp;&nbsp;{join(row.bVal)}</span>
+      </div>
+    );
+  }
   return (
     <>
-      <AppBar crumbs={['Projects', 'Project', 'Compare Versions']} />
-      <div style={{ padding: '28px 30px' }}>
-        <p className="dim mono">Version diff coming soon</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr', fontSize: 13, background: 'var(--bad-faint)' }}>
+        <span style={{ textAlign: 'center', color: 'var(--bad)' }}>−</span>
+        <span style={{ padding: '5px 12px', color: 'var(--bad)' }}>{join(row.aVal)}</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '34px 1fr', fontSize: 13, background: 'var(--ok-faint)' }}>
+        <span style={{ textAlign: 'center', color: 'var(--ok)' }}>+</span>
+        <span style={{ padding: '5px 12px', color: 'var(--ok)', display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+          <span>{join(row.bVal)}</span>
+          {row.delta && <span style={{ color: TONE_COLOR[row.tone], opacity: 0.9 }}>{'// ' + row.delta}</span>}
+        </span>
+      </div>
+    </>
+  );
+}
+
+function UnifiedDiff({ fileName, aVer, bVer, rows }) {
+  return (
+    <div className="wt-card" style={{ overflow: 'hidden', fontFamily: 'var(--mono)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--line)', background: 'var(--head)', fontSize: 13 }}>
+        <CompareIcon />
+        <span style={{ color: 'var(--ink)' }}>{fileName}</span>
+        <span style={{ color: 'var(--ink-faint)' }}>{aVer} → {bVer}</span>
+      </div>
+      <div style={{ padding: '7px 16px', background: 'var(--accent-softer)', color: 'var(--accent)', fontSize: 12.5, borderBottom: '1px solid var(--line-soft)' }}>
+        @@ file metadata @@
+      </div>
+      {rows.map((r) => (
+        <Fragment key={r.k}>
+          <DiffLine row={r} />
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+// Compare two analyzed versions, diff recomputes when either select changes
+export default function DiffScreen() {
+  const { id } = useParams();
+  const { user } = useAuth();
+  const [project, setProject] = useState(null);
+  const [aVer, setAVer] = useState('v2');
+  const [bVer, setBVer] = useState('v3');
+
+  useEffect(() => {
+    getProject(id).then(setProject).catch(() => {});
+  }, [id]);
+
+  const rows = computeDiff(aVer, bVer);
+  const fileName = `${slug(project?.name)}.metadata`;
+
+  return (
+    <>
+      <AppBar
+        crumbs={['Projects', project?.name ?? '…', 'Compare Versions']}
+        user={initials(user?.name)}
+      />
+
+      <div style={{ flex: 1, overflow: 'auto', padding: '28px 30px 40px' }}>
+        <VsHeader aVer={aVer} bVer={bVer} onA={setAVer} onB={setBVer} />
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 22, marginTop: 24, alignItems: 'stretch' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+            <div>
+              <Eyebrow style={{ marginBottom: 8 }}>
+                {aVer} <em style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-faint)' }}>baseline</em>
+              </Eyebrow>
+              <DiffWaveform url={CLIPS[aVer]} />
+            </div>
+            <div>
+              <Eyebrow style={{ marginBottom: 8 }}>
+                {bVer} <Pill tone="ok" style={{ marginLeft: 2 }}>newer</Pill>
+              </Eyebrow>
+              <DiffWaveform url={CLIPS[bVer]} accent />
+            </div>
+          </div>
+
+          <SummaryCards aVer={aVer} bVer={bVer} rows={rows} />
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '30px 0 12px' }}>
+          <Eyebrow>Full metadata diff</Eyebrow>
+          <span className="wt-divsoft" style={{ flex: 1 }} />
+        </div>
+
+        <UnifiedDiff fileName={fileName} aVer={aVer} bVer={bVer} rows={rows} />
       </div>
     </>
   );
