@@ -71,7 +71,7 @@ function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
 // Git spine - clicking a version loads its clip into the waveform
 export default function VersionHistory({ versions, selected, expanded, onToggleExpand, playing, onTogglePlay, onSelectVersion, onDiff, onNewVersion }) {
   const latest = versions[0];
-  const older = versions.slice(1);
+  const older = versions.slice(1).reverse();
   const latestSelected = selected === latest.v;
 
   return (
