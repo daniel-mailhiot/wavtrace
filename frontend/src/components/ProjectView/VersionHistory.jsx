@@ -60,9 +60,10 @@ function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
       <span className="wt-vbadge">{version.v}</span>
       <div style={{ flex: 1 }} className="mono faint">
         <span style={{ fontSize: 12.5, color: 'var(--ink-dim)' }}>{version.file}</span>
-        <span style={{ fontSize: 11.5 }}> · {version.who} {version.when} · {version.meta}</span>
+        <span style={{ fontSize: 11.5 }}> · {version.who} {version.when}</span>
       </div>
-      {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />}
+      {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */}
+      <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>{version.meta}</span>
     </div>
   );
 }

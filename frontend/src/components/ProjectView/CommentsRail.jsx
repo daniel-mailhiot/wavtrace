@@ -44,11 +44,12 @@ function AddComment({ draft, text, duration, onText, onSubmit }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-      <Pill tone={hasDraft ? 'accent' : undefined} style={{ padding: '6px 11px', fontSize: 12, gap: 7, alignSelf: 'flex-start' }}>
-        <span className="wt-dot" style={{ borderRadius: isRegion ? 2 : '50%' }} />
-        {hasDraft ? (isRegion ? 'Region' : 'Point') : 'Pick a point or region'}
-        {hasDraft && <span className="mono" style={{ opacity: 0.7 }}>{detail}</span>}
-      </Pill>
+      {hasDraft && (
+        <Pill tone="accent" style={{ padding: '6px 11px', fontSize: 12, gap: 7, alignSelf: 'flex-start' }}>
+          {isRegion ? 'Region' : 'Point'}
+          <span className="mono" style={{ opacity: 0.7 }}>{detail}</span>
+        </Pill>
+      )}
       <div className="wt-search" style={{ height: 40 }}>
         <input
           value={text}
