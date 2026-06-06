@@ -31,8 +31,8 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
       <span className="wt-vbadge">{version.v}</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
-          current version
-          <Pill tone="accent" style={{ fontSize: 10 }}>latest</Pill>
+          <span className="mono">{version.file}</span>
+          <Pill tone="ok" style={{ fontSize: 10 }}>latest</Pill>
           {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />}
         </div>
         <div className="mono faint" style={{ fontSize: 11.5, marginTop: 2 }}>
@@ -59,8 +59,8 @@ function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
     >
       <span className="wt-vbadge">{version.v}</span>
       <div style={{ flex: 1 }} className="mono faint">
-        <span style={{ fontSize: 12.5, color: 'var(--ink-dim)' }}>{version.who}</span>
-        <span style={{ fontSize: 11.5 }}> · {version.when} · {version.meta}</span>
+        <span style={{ fontSize: 12.5, color: 'var(--ink-dim)' }}>{version.file}</span>
+        <span style={{ fontSize: 11.5 }}> · {version.who} · {version.when} · {version.meta}</span>
       </div>
       {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />}
     </div>

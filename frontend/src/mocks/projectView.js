@@ -3,9 +3,9 @@
 
 // Newest first; v3 is the current version
 export const PV_VERSIONS = [
-  { v: 'v3', tag: 'current', who: 'uploaded by you', when: '2d ago', meta: '8.4 MB · WAV' },
-  { v: 'v2', who: 'uploaded by you', when: '6d ago', meta: '8.1 MB · WAV' },
-  { v: 'v1', who: 'uploaded by you', when: '2w ago', meta: '7.9 MB · WAV' },
+  { v: 'v3', file: 'audio-demo-V3.wav', who: 'uploaded by you', when: '2d ago', meta: '0:12 · 8.4 MB' },
+  { v: 'v2', file: 'audio-demo-V2.wav', who: 'uploaded by you', when: '6d ago', meta: '0:10 · 8.1 MB' },
+  { v: 'v1', file: 'audio-demo-V1.wav', who: 'uploaded by you', when: '2w ago', meta: '0:09 · 7.9 MB' },
 ];
 
 // Comments per version so so switching swaps data
