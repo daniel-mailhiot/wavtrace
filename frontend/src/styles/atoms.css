@@ -94,7 +94,17 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
   border: 1px solid var(--line); background: var(--panel-2); border-radius: var(--r-sm);
   padding: 0 12px; height: 38px; cursor: pointer; transition: 0.14s ease; }
 .wt-select:hover { border-color: var(--accent-line); color: var(--ink); }
-.wt-select:focus { outline: none; border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-softer); }
+.wt-select:focus-visible { outline: none; border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-softer); }
+
+/* Dropdown menu */
+.wt-menu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 100%; z-index: 20;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--r-sm);
+  padding: 4px; box-shadow: 0 14px 34px -16px rgba(0, 0, 0, 0.8); }
+.wt-menu-item { display: flex; align-items: center; width: 100%; font-family: var(--mono);
+  font-size: 13px; color: var(--ink-dim); background: none; border: none; border-radius: 5px;
+  padding: 7px 11px; cursor: pointer; text-align: left; transition: 0.12s ease; }
+.wt-menu-item:hover { background: var(--panel-3); color: var(--ink); }
+.wt-menu-item.active { background: var(--accent-soft); color: var(--accent); }
 
 /* Pills/tags */
 .wt-pill { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono);
