@@ -23,11 +23,10 @@ const TONE_COLOR = {
   faint: 'var(--ink-faint)',
 };
 
-// unified-diff field name ('True peak' -> 'true_peak')
+// Unified diff field name ('True peak' becomes 'true_peak')
 const fieldKey = (k) => k.toLowerCase().replace(' ', '_');
 const slug = (s) => (s || 'project').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-// Version picker, newer side is accent tinted
 function VersionSelect({ value, onChange, accent = false }) {
   const accentStyle = accent
     ? { color: 'var(--accent)', borderColor: 'var(--accent-line)', background: 'var(--accent-soft)' }
@@ -65,37 +64,46 @@ function PendingDiff({ version }) {
   );
 }
 
-// Shared stat row for one metric in both summary cards
-function MetricLine({ children, color }) {
+// Color key for the overlay
+function Legend({ aVer }) {
+  const item = (color, label) => (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+      <span style={{ width: 10, height: 10, borderRadius: 2, background: color }} />
+      <span className="mono faint" style={{ fontSize: 11 }}>{label}</span>
+    </span>
+  );
   return (
-    <div style={{ fontFamily: 'var(--mono)', fontSize: 18, color, marginBottom: 12, display: 'flex', alignItems: 'baseline', gap: 7, flexWrap: 'wrap' }}>
-      {children}
+    <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+      {item('#565a67', `${aVer} baseline`)}
+      {item('var(--ok)', 'louder')}
+      {item('var(--bad)', 'quieter')}
     </div>
   );
 }
 
-// Two stacked cards, baseline values then newer one with its deltas
-function SummaryCards({ aVer, bVer, rows }) {
+function CompareCard({ aVer, bVer, rows }) {
   const heroes = rows.slice(0, 4);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div className="wt-card-2" style={{ padding: 16 }}>
-        <div className="mono faint" style={{ fontSize: 12, marginBottom: 12 }}>{aVer}</div>
-        {heroes.map((r) => (
-          <MetricLine key={r.k} color={r.flagA ? 'var(--bad)' : 'var(--ink)'}>
-            {r.aVal} <small style={{ fontSize: 11, color: 'var(--ink-faint)' }}>{r.unit}</small>
-          </MetricLine>
-        ))}
+    <div className="wt-card-2" style={{ padding: 16 }}>
+      <div className="mono faint" style={{ fontSize: 12, marginBottom: 14 }}>
+        {aVer} <span style={{ color: 'var(--ink-faint)' }}>→</span> {bVer}
       </div>
-      <div className="wt-card-2" style={{ padding: 16 }}>
-        <div className="mono faint" style={{ fontSize: 12, marginBottom: 12 }}>{bVer} <span style={{ color: 'var(--ink-faint)' }}>vs {aVer}</span></div>
-        {heroes.map((r) => (
-          <MetricLine key={r.k} color={r.changed ? TONE_COLOR[r.tone] : 'var(--ink)'}>
-            {r.bVal} <small style={{ fontSize: 11, color: 'var(--ink-faint)' }}>{r.unit}</small>
-            {r.changed && <small style={{ fontSize: 11.5, color: 'var(--ink-dim)' }}>{r.delta}</small>}
-          </MetricLine>
-        ))}
-      </div>
+      {heroes.map((r) => (
+        <div key={r.k} style={{ marginBottom: 13 }}>
+          <div className="mono" style={{ fontSize: 10.5, color: 'var(--ink-faint)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>
+            {r.k}
+          </div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 15, display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ color: r.flagA ? 'var(--bad)' : 'var(--ink-dim)' }}>{r.aVal}</span>
+            <span style={{ color: 'var(--ink-faint)', fontSize: 12 }}>→</span>
+            <span style={{ color: r.changed ? TONE_COLOR[r.tone] : 'var(--ink)' }}>{r.bVal}</span>
+            {r.unit && <small style={{ fontSize: 11, color: 'var(--ink-faint)' }}>{r.unit}</small>}
+          </div>
+          {r.changed && r.delta && (
+            <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-dim)', marginTop: 3 }}>{r.delta}</div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -177,22 +185,16 @@ export default function DiffScreen() {
         <VsHeader aVer={aVer} bVer={bVer} onA={setAVer} onB={setBVer} pending={Boolean(pendingVer)} />
 
         <div className="wt-diff-top">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-            <div>
-              <Eyebrow style={{ marginBottom: 8 }}>
-                {aVer} <em style={{ textTransform: 'none', letterSpacing: 0, color: 'var(--ink-faint)' }}>baseline</em>
-              </Eyebrow>
-              <DiffWaveform url={CLIPS[aVer]} />
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+              <Eyebrow style={{ margin: 0 }}>Waveform overlay</Eyebrow>
+              <span className="wt-grow" />
+              <Legend aVer={aVer} />
             </div>
-            <div>
-              <Eyebrow style={{ marginBottom: 8 }}>
-                {bVer} <Pill tone="ok" style={{ marginLeft: 2 }}>newer</Pill>
-              </Eyebrow>
-              <DiffWaveform url={CLIPS[bVer]} accent />
-            </div>
+            <DiffWaveform baselineUrl={CLIPS[aVer]} compareUrl={CLIPS[bVer]} />
           </div>
 
-          {pendingVer ? <PendingDiff version={pendingVer} /> : <SummaryCards aVer={aVer} bVer={bVer} rows={rows} />}
+          {pendingVer ? <PendingDiff version={pendingVer} /> : <CompareCard aVer={aVer} bVer={bVer} rows={rows} />}
         </div>
 
         {!pendingVer && (
