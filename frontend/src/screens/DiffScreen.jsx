@@ -82,7 +82,7 @@ function Legend({ aVer }) {
 }
 
 function CompareCard({ aVer, bVer, rows }) {
-  const heroes = rows.slice(0, 4);
+  const heroes = rows.slice(0, 2);
   return (
     <div className="wt-card-2" style={{ padding: 16 }}>
       <div className="mono faint" style={{ fontSize: 12, marginBottom: 14 }}>
