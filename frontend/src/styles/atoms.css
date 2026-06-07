@@ -33,6 +33,8 @@ Atom classes (all screens reuse)
   font-size: 13px; color: var(--ink-faint); }
 .wt-crumbs .sep { color: var(--ink-faint); opacity: 0.6; }
 .wt-crumbs .here { color: var(--ink-dim); }
+.wt-crumbs .link { color: var(--ink-faint); text-decoration: none; transition: color 0.12s; }
+.wt-crumbs .link:hover { color: var(--ink); }
 .wt-grow { flex: 1; }
 
 /* Avatars */

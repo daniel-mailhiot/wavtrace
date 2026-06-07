@@ -8,7 +8,7 @@ import VersionHistory from '../components/ProjectView/VersionHistory';
 import MetadataPanel from '../components/ProjectView/MetadataPanel';
 import CommentsRail from '../components/ProjectView/CommentsRail';
 import initials from '../utils/initials';
-import { getProject, deleteProject } from '../api/projects';
+import { getProject, deleteProject, getCachedProject } from '../api/projects';
 import { PV_VERSIONS, PV_COMMENTS_BY_VERSION } from '../mocks/projectView';
 import v1 from '../assets/audio-demo-V1.wav';
 import v2 from '../assets/audio-demo-V2.wav';
@@ -36,8 +36,8 @@ export default function ProjectViewScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [project, setProject] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [project, setProject] = useState(() => getCachedProject(id));
+  const [loading, setLoading] = useState(!project);
   const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // 'rename' | 'collab' | 'delete'
   const [deleting, setDeleting] = useState(false);
@@ -158,7 +158,7 @@ export default function ProjectViewScreen() {
   if (loading) {
     return (
       <>
-        <AppBar crumbs={['Projects', '…']} user={initials(user?.name)} />
+        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, '…']} user={initials(user?.name)} />
         <div style={{ padding: '30px 36px' }}>
           <p className="mono dim" style={{ fontSize: 13 }}>Loading project…</p>
         </div>
@@ -169,7 +169,7 @@ export default function ProjectViewScreen() {
   if (error || !project) {
     return (
       <>
-        <AppBar crumbs={['Projects', 'Not found']} user={initials(user?.name)} />
+        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, 'Not found']} user={initials(user?.name)} />
         <div style={{ padding: '30px 36px' }}>
           <p className="mono" style={{ fontSize: 13, color: 'var(--bad)' }}>{error || 'Project not found'}</p>
         </div>
@@ -179,7 +179,7 @@ export default function ProjectViewScreen() {
 
   return (
     <>
-      <AppBar crumbs={['Projects', project.name]} user={initials(user?.name)} />
+      <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, project.name]} user={initials(user?.name)} />
 
       <div className="wt-pv">
         <div className="wt-pv-main">

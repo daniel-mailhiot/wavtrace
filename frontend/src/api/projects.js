@@ -1,11 +1,20 @@
 import { api } from './client';
 
+const cache = new Map();
+
+export function getCachedProject(id) {
+  return cache.get(id) ?? null;
+}
+
 export function listProjects() {
   return api.get('/api/projects');
 }
 
 export function getProject(id) {
-  return api.get(`/api/projects/${id}`);
+  return api.get(`/api/projects/${id}`).then((project) => {
+    cache.set(id, project);
+    return project;
+  });
 }
 
 export function createProject(name) {

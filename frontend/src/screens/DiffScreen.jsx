@@ -7,7 +7,7 @@ import Pill from '../components/Pill';
 import DiffWaveform from '../components/DiffWaveform';
 import { CompareIcon } from '../components/icons';
 import initials from '../utils/initials';
-import { getProject } from '../api/projects';
+import { getProject, getCachedProject } from '../api/projects';
 import { DIFF_VERSIONS, computeDiff, isAnalyzed } from '../mocks/diff';
 import v1 from '../assets/audio-demo-V1.wav';
 import v2 from '../assets/audio-demo-V2.wav';
@@ -161,7 +161,7 @@ function UnifiedDiff({ fileName, aVer, bVer, rows }) {
 export default function DiffScreen() {
   const { id } = useParams();
   const { user } = useAuth();
-  const [project, setProject] = useState(null);
+  const [project, setProject] = useState(() => getCachedProject(id));
   const [aVer, setAVer] = useState('v2');
   const [bVer, setBVer] = useState('v3');
 
@@ -177,7 +177,11 @@ export default function DiffScreen() {
   return (
     <>
       <AppBar
-        crumbs={['Projects', project?.name ?? '…', 'Compare Versions']}
+        crumbs={[
+          { label: 'Projects', to: '/projects' },
+          { label: project?.name ?? '…', to: `/projects/${id}` },
+          'Compare Versions',
+        ]}
         user={initials(user?.name)}
       />
 
