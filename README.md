@@ -3,7 +3,8 @@
 wavTrace is a full-stack web app for audio review and revision tracking, similar concept to GitHub but designed for team-based audio deliverables instead of software development. A user uploads audio to be reviewed, the reviewer leaves timestamped notes for changes, and the user iterates based on feedback, with differences between iterations tracked using a version history pinned to the notes and feedback from each version.
 
 
-## Planned features
+## Planned Features 
+(attach photos when I'm done)
 
 **Versioning** - Tracks the full history of an audio project across iterations, cleanly logging who said what, when, and on which version so changes and feedback are easy to follow over time.
 
@@ -21,13 +22,11 @@ wavTrace is a full-stack web app for audio review and revision tracking, similar
 
 **Approval** - Mark a version as "approved" or "final." Locks it from further comments and visually flags it in the version history.
 
-**DAW marker export** - Export comment timestamps as a .txt file for offline reference.
 
-
-## Getting started
+## Getting Started (local setup)
 
 ### Prerequisites
-- Node.js (v18 or newer)
+- Node.js (v20 or newer)
 - A MongoDB Atlas connection string
 
 ### 1. Clone and install
@@ -56,7 +55,7 @@ SESSION_SECRET=any-long-random-string
 PORT=5000
 ```
 
-For running the API tests, also add `MONGO_URI_TEST` (same connection string, but with `wavtrace_test` as the database name in the path).
+Optional: If you want to run the Newman API tests (see below), also add `MONGO_URI_TEST` (same connection string, but with `wavtrace_test` as the database name in the path).
 
 ### 3. Run the app
 
@@ -72,7 +71,7 @@ cd frontend
 npm run dev
 ```
 
-Open frontend URL shown in the terminal (default `http://localhost:5173`) to use the app.
+Open frontend URL shown in the terminal (`http://localhost:5173`) to use the app.
 
 
 ## Testing
@@ -93,7 +92,7 @@ An API suite covering auth and project routes, including role-based permission r
 ![Postman Collection Runner results — 24 tests passing, 0 errors](docs/postman-run-summary.png)
 
 
-#### Running it in Newman CLI
+#### Running it in Newman CLI (optional)
 Two terminals from the `backend` folder:
 
 ```bash
@@ -134,49 +133,22 @@ Requires a `MONGO_URI_TEST` value in `backend/.env`: the same Atlas connection s
 - Run the tests on every push with GitHub Actions.
 
 
-## Project structure
+## Usage
+(how to use the app, fill out when I'm near end)
 
-**Monorepo layout** (frontend/backend)
 
-```
-wavtrace/
-├── backend/
-│   ├── middleware/
-│   ├── models/
-│   │   ├── Comment.js
-│   │   ├── Project.js
-│   │   ├── User.js
-│   │   └── Version.js
-│   ├── routes/
-│   ├── .env
-│   ├── .gitignore
-│   ├── package.json
-│   ├── package-lock.json
-│   └── server.js
-├── docs/
-│   ├── architecture-diagram.excalidraw
-│   ├── architecture-diagram.png
-│   ├── architecture-diagram-light.png
-│   └── proposal.md
-├── frontend/
-│   ├── public/
-│   │   ├── favicon.svg
-│   │   └── icons.svg
-│   ├── src/
-│   │   ├── assets/
-│   │   │   ├── hero.png
-│   │   │   ├── react.svg
-│   │   │   └── vite.svg
-│   │   ├── App.css
-│   │   ├── App.jsx
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── .gitignore
-│   ├── eslint.config.js
-│   ├── index.html
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── README.md
-│   └── vite.config.js
-└── README.md
-```
+## Tech Stack
+
+- **Language:** JavaScript
+- **Frontend:** React + Vite, React Router
+- **Backend:** Node.js + Express
+- **Audio analysis:** FFmpeg + ffprobe
+- **Waveform:** wavesurfer.js v7
+- **Database:** MongoDB Atlas
+- **Auth:** Passport (local strategy), express-session, connect-mongo, bcryptjs
+- **File storage:** Cloudflare R2
+- **Testing:** Postman/Newman (API), Playwright (E2E)
+
+
+## Future Improvements
+(update at end)
