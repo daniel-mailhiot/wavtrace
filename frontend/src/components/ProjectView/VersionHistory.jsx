@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import Eyebrow from '../Eyebrow';
 import Pill from '../Pill';
 import Button from '../Button';
@@ -31,7 +32,7 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
         <div style={{ fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
           <span className="mono">{version.file}</span>
           <Pill tone="ok" style={{ fontSize: 10 }}>latest</Pill>
-          {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />}
+          {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */} {/* (disabled) */}
         </div>
         <div className="mono faint" style={{ fontSize: 11.5, marginTop: 2 }}>
           {version.who} {version.when} · {version.meta}
@@ -47,7 +48,7 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
   );
 }
 
-function OlderRow({ version, selected, onSelect }) {
+function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
   const isSelected = selected === version.v;
   return (
     <div
@@ -60,6 +61,7 @@ function OlderRow({ version, selected, onSelect }) {
         <span style={{ fontSize: 12.5, color: 'var(--ink-dim)' }}>{version.file}</span>
         <span style={{ fontSize: 11.5 }}> · {version.who} {version.when}</span>
       </div>
+      {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */} {/* (disabled) */}
       <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>{version.meta}</span>
     </div>
   );
@@ -88,9 +90,17 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
             <span style={{ display: 'flex', alignItems: 'center', gap: 11, flex: 1 }}>
               <span className="mono faint" style={{ fontSize: 11 }}>{expanded ? '▾' : '▸'}</span>
               <span style={{ fontSize: 13, color: 'var(--ink-dim)' }}>{older.length} older versions</span>
-              {older.map((v) => (
-                <Pill key={v.v}>{v.v} · {v.when.replace(' ago', '')}</Pill>
-              ))}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {older.map((v, i) => (
+                  <Fragment key={v.v}>
+                    {i > 0 && <span className="mono faint" style={{ fontSize: 11 }}>·</span>}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Pill>{v.v}</Pill>
+                      <span className="mono faint" style={{ fontSize: 11 }}>{v.when.replace(' ago', '')}</span>
+                    </span>
+                  </Fragment>
+                ))}
+              </span>
             </span>
             <span className="mono" style={{ fontSize: 12, color: 'var(--accent)' }}>{expanded ? 'collapse' : 'expand'}</span>
           </div>
@@ -103,6 +113,8 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
                 key={v.v}
                 version={v}
                 selected={selected}
+                playing={playing}
+                onTogglePlay={onTogglePlay}
                 onSelect={() => onSelectVersion(v.v)}
               />
             ))}
