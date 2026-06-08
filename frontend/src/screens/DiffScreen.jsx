@@ -1,10 +1,11 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import AppBar from '../components/AppBar';
 import Eyebrow from '../components/Eyebrow';
 import Pill from '../components/Pill';
 import DiffWaveform from '../components/DiffWaveform';
+import Select from '../components/Select';
 import { CompareIcon } from '../components/icons';
 import initials from '../utils/initials';
 import { getProject, getCachedProject } from '../api/projects';
@@ -24,91 +25,12 @@ const TONE_COLOR = {
 const fieldKey = (k) => k.toLowerCase().replace(' ', '_');
 const slug = (s) => (s || 'project').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-function Caret({ open }) {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 11 11"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      style={{ opacity: 0.6, transition: 'transform 0.14s ease', transform: open ? 'rotate(180deg)' : 'none' }}
-    >
-      <path d="M2 4l3.5 3.5L9 4" />
-    </svg>
-  );
-}
-
-function VersionSelect({ value, options, onChange, accent = false }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  // Close on outside click or Escape
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e) => { if (!ref.current.contains(e.target)) setOpen(false); };
-    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
-  const accentStyle = accent
-    ? { color: 'var(--accent)', borderColor: 'var(--accent-line)', background: 'var(--accent-soft)' }
-    : undefined;
-
-  const current = options.find((o) => o.id === value);
-
-  function pick(id) {
-    onChange(id);
-    setOpen(false);
-  }
-
-  return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <button
-        type="button"
-        className="wt-select"
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...accentStyle }}
-      >
-        {current?.label}
-        <Caret open={open} />
-      </button>
-
-      {open && (
-        <div className="wt-menu" role="listbox">
-          {options.map((o) => (
-            <button
-              key={o.id}
-              type="button"
-              role="option"
-              aria-selected={o.id === value}
-              className={'wt-menu-item' + (o.id === value ? ' active' : '')}
-              onClick={() => pick(o.id)}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function VsHeader({ options, aId, bId, onA, onB, pending }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <VersionSelect value={aId} options={options} onChange={onA} />
+      <Select value={aId} options={options} onChange={onA} />
       <span className="mono faint" style={{ fontSize: 16 }}>→</span>
-      <VersionSelect value={bId} options={options} onChange={onB} accent />
+      <Select value={bId} options={options} onChange={onB} accent />
       <span className="wt-grow" />
       {pending ? <Pill tone="warn">analysis pending</Pill> : <Pill tone="ok">both analyzed</Pill>}
     </div>
