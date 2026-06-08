@@ -1,0 +1,40 @@
+// analyzeAudio output for the 3 demo WAVs so ffmpeg does not run every signup
+
+export default {
+  'audio-demo-V1.wav': {
+    durationSec: 9.080181,
+    sampleRate: 44100,
+    channels: 2,
+    bitDepth: 16,
+    bitrate: 1411362,
+    format: 'wav',
+    loudness: -14.91,
+    truePeak: -0.77,
+    lra: 0.9,
+    clipping: false,
+  },
+  'audio-demo-V2.wav': {
+    durationSec: 9.080181,
+    sampleRate: 44100,
+    channels: 2,
+    bitDepth: 16,
+    bitrate: 1411362,
+    format: 'wav',
+    loudness: -17.84,
+    truePeak: -2.15,
+    lra: 1.4,
+    clipping: false,
+  },
+  'audio-demo-V3.wav': {
+    durationSec: 9.074286,
+    sampleRate: 44100,
+    channels: 2,
+    bitDepth: 16,
+    bitrate: 1411362,
+    format: 'wav',
+    loudness: -18.3,
+    truePeak: -5.01,
+    lra: 0.3,
+    clipping: false,
+  },
+};

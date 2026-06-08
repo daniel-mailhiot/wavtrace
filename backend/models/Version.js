@@ -8,6 +8,13 @@ const versionSchema = new mongoose.Schema({
   originalName: { type: String, required: true },
   size: { type: Number, required: true },
   mimeType: { type: String, required: true },
+  analysisStatus: { type: String, enum: ['processing', 'ready', 'failed'], default: 'processing' },
+  // ffmpeg numbers frontend formats for display
+  analysis: {
+    durationSec: Number, sampleRate: Number, channels: Number,
+    bitDepth: Number, bitrate: Number, format: String,
+    loudness: Number, truePeak: Number, lra: Number, clipping: Boolean,
+  },
 }, { timestamps: true });
 
 export default mongoose.model('Version', versionSchema);
