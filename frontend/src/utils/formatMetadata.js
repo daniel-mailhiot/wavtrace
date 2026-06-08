@@ -24,3 +24,20 @@ export function panelMetadata(version) {
   ];
   return { hero, file };
 }
+
+// Diff needs raw numbers to compute deltas
+export function diffMetadata(version) {
+  const a = version.analysis ?? {};
+  return {
+    loudness: a.loudness,
+    truePeak: a.truePeak,
+    lra: a.lra,
+    duration: a.durationSec,
+    clipping: Boolean(a.clipping),
+    size: (version.size ?? 0) / (1024 * 1024),
+    bitrate: (a.bitrate ?? 0) / 1e6,
+    sampleRate: a.sampleRate ? `${a.sampleRate / 1000} kHz` : '—',
+    bitDepth: a.bitDepth ? `${a.bitDepth}-bit` : '—',
+    format: (a.format ?? '').toUpperCase(),
+  };
+}
