@@ -136,8 +136,10 @@ export default function ProjectsScreen() {
                       <span style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor[role] }} />
                       <span style={{ fontSize: 14.5, fontWeight: 600 }}>{p.name}</span>
                     </div>
-                    <Role role={role} />
-                    <span className="mono faint" style={{ fontSize: 13 }}>{p.versionCount || '-'}</span>
+                    <div>
+                      <Role role={role} />
+                    </div>
+                    <span className="mono faint" style={{ fontSize: 12.5 }}>{p.versionCount || 0} versions</span>
                     <span className="mono faint" style={{ fontSize: 12.5 }}>{ago}</span>
                     <AvatarStack>
                       {p.members.map((m) => (
