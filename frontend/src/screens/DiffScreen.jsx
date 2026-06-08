@@ -1,13 +1,11 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext';
 import AppBar from '../components/AppBar';
 import Eyebrow from '../components/Eyebrow';
 import Pill from '../components/Pill';
 import DiffWaveform from '../components/DiffWaveform';
 import Select from '../components/Select';
 import { CompareIcon } from '../components/icons';
-import initials from '../utils/initials';
 import { getProject, getCachedProject } from '../api/projects';
 import { listVersions } from '../api/versions';
 import { diffMetadata } from '../utils/formatMetadata';
@@ -145,7 +143,6 @@ function UnifiedDiff({ fileName, aVer, bVer, rows }) {
 // Compare two analyzed versions, diff recomputes when either select changes
 export default function DiffScreen() {
   const { id } = useParams();
-  const { user } = useAuth();
   const [project, setProject] = useState(() => getCachedProject(id));
   const [versions, setVersions] = useState([]);
   const [versionsLoaded, setVersionsLoaded] = useState(false);
@@ -190,7 +187,6 @@ export default function DiffScreen() {
           { label: project?.name ?? '…', to: `/projects/${id}` },
           'Compare Versions',
         ]}
-        user={initials(user?.name)}
       />
 
       <div style={{ flex: 1, overflow: 'auto', padding: '28px 30px 40px' }}>

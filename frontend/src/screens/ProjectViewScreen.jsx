@@ -219,7 +219,7 @@ export default function ProjectViewScreen() {
   if (loading) {
     return (
       <>
-        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, '…']} user={initials(user?.name)} />
+        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, '…']} />
         <div style={{ padding: '30px 36px' }}>
           <p className="mono dim" style={{ fontSize: 13 }}>Loading project…</p>
         </div>
@@ -230,7 +230,7 @@ export default function ProjectViewScreen() {
   if (error || !project) {
     return (
       <>
-        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, 'Not found']} user={initials(user?.name)} />
+        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, 'Not found']} />
         <div style={{ padding: '30px 36px' }}>
           <p className="mono" style={{ fontSize: 13, color: 'var(--bad)' }}>{error || 'Project not found'}</p>
         </div>
@@ -240,7 +240,7 @@ export default function ProjectViewScreen() {
 
   return (
     <>
-      <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, project.name]} user={initials(user?.name)} />
+      <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, project.name]} />
 
       <div className="wt-pv">
         <div className="wt-pv-main">

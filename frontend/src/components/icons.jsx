@@ -66,3 +66,23 @@ export function TrashIcon() {
     </svg>
   );
 }
+
+export function InfoIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" style={{ width: 15, height: 15 }}>
+      <circle cx="8" cy="8" r="6" />
+      <path d="M8 7.3v3.4" strokeLinecap="round" />
+      <circle cx="8" cy="5.3" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+// Door with an arrow leaving it (used for sign out)
+export function SignOutIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" style={{ width: 15, height: 15 }}>
+      <path d="M6.5 2.5H3.5v11h3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.5 5l3 3-3 3M12.5 8H6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

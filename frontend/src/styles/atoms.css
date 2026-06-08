@@ -105,6 +105,8 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
   padding: 7px 11px; cursor: pointer; text-align: left; transition: 0.12s ease; }
 .wt-menu-item:hover { background: var(--panel-3); color: var(--ink); }
 .wt-menu-item.active { background: var(--accent-soft); color: var(--accent); }
+.wt-menu-item.danger { color: var(--bad); }
+.wt-menu-item.danger:hover { background: var(--bad-soft); color: var(--bad); }
 
 /* Pills/tags */
 .wt-pill { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono);

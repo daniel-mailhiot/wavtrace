@@ -1,9 +1,9 @@
 import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import Wordmark from './Wordmark';
-import { Avatar } from './Avatar';
+import UserMenu from './UserMenu';
 
-export default function AppBar({ crumbs = [], right = null, user = '?' }) {
+export default function AppBar({ crumbs = [], right = null }) {
   return (
     <div className="wt-appbar">
       <Wordmark />
@@ -26,7 +26,7 @@ export default function AppBar({ crumbs = [], right = null, user = '?' }) {
       )}
       <div className="wt-grow" />
       {right}
-      <Avatar size={24} accent title="you">{user}</Avatar>
+      <UserMenu />
     </div>
   );
 }

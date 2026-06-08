@@ -59,7 +59,6 @@ export default function ProjectsScreen() {
     <>
       <AppBar
         crumbs={['Projects']}
-        user={initials(user?.name)}
         right={
           <SearchField
             placeholder="Search…"
