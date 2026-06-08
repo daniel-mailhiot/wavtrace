@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ModalFrame from '../components/Modal/ModalFrame';
 import { ModalHead, ModalFoot } from '../components/Modal/ModalParts';
 import Button from '../components/Button';
+import Select from '../components/Select';
 import { Avatar } from '../components/Avatar';
 import Pill from '../components/Pill';
 import Eyebrow from '../components/Eyebrow';
@@ -12,39 +13,17 @@ import { addMember, updateMember, removeMember } from '../api/projects';
 // Table columns: member / email / role / remove
 const GRID = '1.3fr 1.6fr 116px 40px';
 
+// Roles an owner can assign
+const ROLE_OPTIONS = [
+  { id: 'reviewer', label: 'reviewer' },
+  { id: 'viewer', label: 'viewer' },
+];
+
 const LEGEND = [
   ['owner', 'manages versions, members & settings'],
   ['reviewer', 'listens + leaves timestamped feedback'],
   ['viewer', 'listens + reads comments only'],
 ];
-
-function RoleSelect({ value, onChange, width = 116 }) {
-  return (
-    <div style={{ position: 'relative', width, flex: 'none' }}>
-      <select
-        className="wt-select"
-        value={value}
-        onChange={onChange}
-        style={{ width: '100%', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none', paddingRight: 26 }}
-      >
-        <option value="reviewer">reviewer</option>
-        <option value="viewer">viewer</option>
-      </select>
-      <svg
-        width="10"
-        height="10"
-        viewBox="0 0 11 11"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-dim)', opacity: 0.6, pointerEvents: 'none' }}
-      >
-        <path d="M2 4l3.5 3.5L9 4" />
-      </svg>
-    </div>
-  );
-}
 
 function RemoveButton({ onClick }) {
   return (
@@ -59,8 +38,6 @@ function RemoveButton({ onClick }) {
   );
 }
 
-// Collaborators manager: add / change role / remove hit the members API,
-// then refresh from the populated response so names + emails are current
 export default function CollaboratorsModal({ project, onClose, onMembersChanged }) {
   const [members, setMembers] = useState(project.members);
   const [email, setEmail] = useState('');
@@ -126,7 +103,7 @@ export default function CollaboratorsModal({ project, onClose, onMembersChanged 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              <RoleSelect value={role} onChange={(e) => setRole(e.target.value)} width={120} />
+              <Select value={role} options={ROLE_OPTIONS} onChange={setRole} width={120} />
               <Button variant="primary" type="submit" disabled={busy}>
                 <PlusIcon /> Add
               </Button>
@@ -136,9 +113,9 @@ export default function CollaboratorsModal({ project, onClose, onMembersChanged 
               <p className="mono" style={{ margin: '0 0 16px', fontSize: 12, color: 'var(--bad)' }}>{error}</p>
             )}
 
-            <div className="wt-card" style={{ overflow: 'hidden' }}>
+            <div className="wt-card">
               <div
-                style={{ display: 'grid', gridTemplateColumns: GRID, gap: 12, padding: '10px 16px', background: 'var(--head)', borderBottom: '1px solid var(--line)', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+                style={{ display: 'grid', gridTemplateColumns: GRID, gap: 12, padding: '10px 16px', background: 'var(--head)', borderRadius: 'var(--r-md) var(--r-md) 0 0', borderBottom: '1px solid var(--line)', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink-faint)', textTransform: 'uppercase', letterSpacing: '0.5px' }}
               >
                 <span>Member</span>
                 <span>Email</span>
@@ -162,7 +139,7 @@ export default function CollaboratorsModal({ project, onClose, onMembersChanged 
                     {isOwner ? (
                       <Pill tone="owner" style={{ justifySelf: 'end' }}>owner</Pill>
                     ) : (
-                      <RoleSelect value={m.role} width={108} onChange={(e) => handleRoleChange(u._id, e.target.value)} />
+                      <Select value={m.role} options={ROLE_OPTIONS} width={108} onChange={(newRole) => handleRoleChange(u._id, newRole)} />
                     )}
                     {isOwner ? (
                       <span className="faint" style={{ textAlign: 'center' }}>-</span>
