@@ -11,6 +11,7 @@ import {
   updateMember,
   removeMember
 } from '../controllers/projectController.js';
+import { listVersions } from '../controllers/versionController.js';
 
 const router = express.Router();
 
@@ -25,5 +26,7 @@ router.delete('/:id', requireProjectRole('owner'), deleteProject);
 router.post('/:id/members', requireProjectRole('owner'), addMember);
 router.patch('/:id/members/:userId', requireProjectRole('owner'), updateMember);
 router.delete('/:id/members/:userId', requireProjectRole('owner'), removeMember);
+
+router.get('/:id/versions', requireProjectRole(), listVersions);
 
 export default router;
