@@ -295,6 +295,7 @@ export default function ProjectViewScreen() {
 
         <CommentsRail
           comments={numberedComments}
+          hasVersion={Boolean(currentVersion)}
           activeId={activeId}
           duration={duration}
           draft={draft}

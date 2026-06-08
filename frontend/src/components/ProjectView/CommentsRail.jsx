@@ -48,7 +48,7 @@ function CommentCard({ comment, active, duration, canDelete, onDelete, onClick }
 }
 
 // Disabled until a point or region is picked on the waveform
-function AddComment({ draft, text, duration, onText, onSubmit }) {
+function AddComment({ hasVersion, draft, text, duration, onText, onSubmit }) {
   const hasDraft = Boolean(draft);
   const isRegion = Boolean(draft?.region);
   const detail = !hasDraft
@@ -72,7 +72,9 @@ function AddComment({ draft, text, duration, onText, onSubmit }) {
           onChange={(e) => onText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onSubmit()}
           placeholder={
-            hasDraft
+            !hasVersion
+              ? 'Upload audio to add comments'
+              : hasDraft
               ? isRegion
                 ? `Add feedback on ${detail}…`
                 : `Add feedback @ ${detail}…`
@@ -87,7 +89,7 @@ function AddComment({ draft, text, duration, onText, onSubmit }) {
   );
 }
 
-export default function CommentsRail({ comments, activeId, duration, draft, text, currentUserId, onSelect, onText, onSubmit, onDelete }) {
+export default function CommentsRail({ comments, hasVersion, activeId, duration, draft, text, currentUserId, onSelect, onText, onSubmit, onDelete }) {
   return (
     <div className="wt-pv-rail">
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
@@ -98,21 +100,25 @@ export default function CommentsRail({ comments, activeId, duration, draft, text
       </div>
 
       <div className="wt-pv-rail-list" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 9 }}>
-        {comments.map((c) => (
-          <CommentCard
-            key={c.id}
-            comment={c}
-            active={activeId === c.id}
-            duration={duration}
-            canDelete={c.author === currentUserId}
-            onDelete={onDelete}
-            onClick={() => onSelect(c)}
-          />
-        ))}
+        {comments.length === 0 ? (
+          <p className="mono faint" style={{ fontSize: 13, margin: 0 }}>No comments yet</p>
+        ) : (
+          comments.map((c) => (
+            <CommentCard
+              key={c.id}
+              comment={c}
+              active={activeId === c.id}
+              duration={duration}
+              canDelete={c.author === currentUserId}
+              onDelete={onDelete}
+              onClick={() => onSelect(c)}
+            />
+          ))
+        )}
       </div>
 
       <div style={{ padding: 16, borderTop: '1px solid var(--line)' }}>
-        <AddComment draft={draft} text={text} duration={duration} onText={onText} onSubmit={onSubmit} />
+        <AddComment hasVersion={hasVersion} draft={draft} text={text} duration={duration} onText={onText} onSubmit={onSubmit} />
       </div>
     </div>
   );
