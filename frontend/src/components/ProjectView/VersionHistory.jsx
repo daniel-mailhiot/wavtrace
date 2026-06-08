@@ -20,7 +20,7 @@ function PlayPill({ playing, onTogglePlay }) {
 }
 
 function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff, onNewVersion }) {
-  const isSelected = selected === version.v;
+  const isSelected = selected === version._id;
   return (
     <div
       className={'wt-vrow' + (isSelected ? ' active' : '')}
@@ -49,7 +49,7 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
 }
 
 function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
-  const isSelected = selected === version.v;
+  const isSelected = selected === version._id;
   return (
     <div
       className={'wt-vrow' + (isSelected ? ' active' : '')}
@@ -71,7 +71,7 @@ function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
 export default function VersionHistory({ versions, selected, expanded, onToggleExpand, playing, onTogglePlay, onSelectVersion, onDiff, onNewVersion }) {
   const latest = versions[0];
   const older = versions.slice(1).reverse();
-  const latestSelected = selected === latest.v;
+  const latestSelected = selected === latest._id;
 
   return (
     <div>
@@ -92,7 +92,7 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
               <span style={{ fontSize: 13, color: 'var(--ink-dim)' }}>{older.length} older versions</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {older.map((v, i) => (
-                  <Fragment key={v.v}>
+                  <Fragment key={v._id}>
                     {i > 0 && <span className="mono faint" style={{ fontSize: 11 }}>·</span>}
                     <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <Pill>{v.v}</Pill>
@@ -110,12 +110,12 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
             {older.map((v) => (
               <OlderRow
-                key={v.v}
+                key={v._id}
                 version={v}
                 selected={selected}
                 playing={playing}
                 onTogglePlay={onTogglePlay}
-                onSelect={() => onSelectVersion(v.v)}
+                onSelect={() => onSelectVersion(v._id)}
               />
             ))}
           </div>
@@ -131,7 +131,7 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
             selected={selected}
             playing={playing}
             onTogglePlay={onTogglePlay}
-            onSelect={() => onSelectVersion(latest.v)}
+            onSelect={() => onSelectVersion(latest._id)}
             onDiff={onDiff}
             onNewVersion={onNewVersion}
           />

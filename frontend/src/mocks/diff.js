@@ -1,29 +1,21 @@
-// Temp metadata until the analysis backend exists
-// The diff is built from these specs so the version selects actually recompute
+// Diff formatting for the compare screen
 
-// Newest last so older to newer reads left to right
+import formatTime from '../utils/formatTime';
+
 export const DIFF_VERSIONS = ['v1', 'v2', 'v3'];
 
-// Whether each version's analysis has finished; all true until the analysis
-// backend exists, once it does a freshly uploaded version reads false here
-// until its result comes back, and the diff falls back to a pending state
-const ANALYZED = { v1: true, v2: true, v3: true };
-export const isAnalyzed = (ver) => ANALYZED[ver] ?? false;
-
-// v3 matches the project view metadata panel so the two screens agree
-const VERSION_META = {
+// Sample specs kept for the diff unit tests
+export const VERSION_META = {
   v1: { loudness: -18.3, duration: 205, truePeak: 1.4, lra: 9.6, clipping: true, size: 7.9, bitrate: 2.1, sampleRate: '48 kHz', bitDepth: '24-bit', format: 'WAV' },
   v2: { loudness: -16.1, duration: 200, truePeak: 0.3, lra: 8.1, clipping: true, size: 8.1, bitrate: 2.2, sampleRate: '48 kHz', bitDepth: '24-bit', format: 'WAV' },
   v3: { loudness: -14.2, duration: 192, truePeak: -1.0, lra: 6.4, clipping: false, size: 8.4, bitrate: 2.3, sampleRate: '48 kHz', bitDepth: '24-bit', format: 'WAV' },
 };
 
 const round1 = (n) => Math.round(n * 10) / 10;
-const clock = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-// '−' is the unicode minus (U+2212) so deltas line up with the '+' sign
+// Unicode minus (U+2212) so deltas line up with the '+' sign
 const signed = (n) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 
-// Each metric formats its value and describes a change between two versions
-// delta returns null when a change carries no extra meaning
+// Each row formats a value and describes its change, delta null when there's nothing to add
 const METRICS = [
   {
     k: 'Loudness', unit: 'LUFS',
@@ -35,7 +27,7 @@ const METRICS = [
   },
   {
     k: 'Duration', unit: '',
-    value: (v) => clock(v.duration),
+    value: (v) => formatTime(v.duration),
     delta: (a, b) => {
       const d = b.duration - a.duration;
       return { text: `${signed(d)}s · ${d >= 0 ? 'longer' : 'shorter'}`, tone: 'dim' };
@@ -47,7 +39,7 @@ const METRICS = [
     flagA: (a) => a.truePeak > 0, // over 0 dB risks clipping
     delta: (a, b) =>
       a.truePeak > 0 && b.truePeak <= 0
-        ? { text: '✓ fixed', tone: 'ok' }
+        ? { text: 'fixed', tone: 'ok' }
         : { text: `${signed(round1(b.truePeak - a.truePeak))} dB`, tone: 'dim' },
   },
   {
@@ -82,9 +74,7 @@ const METRICS = [
   { k: 'Format', unit: '', value: (v) => v.format, delta: () => null },
 ];
 
-export function computeDiff(aVer, bVer) {
-  const a = VERSION_META[aVer];
-  const b = VERSION_META[bVer];
+export function computeDiff(a, b) {
   return METRICS.map((m) => {
     const aVal = m.value(a);
     const bVal = m.value(b);

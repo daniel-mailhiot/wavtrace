@@ -1,4 +1,6 @@
 import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -8,6 +10,7 @@ import passport from './config/passport.js';
 import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 // Use test DB during API tests, otherwise use real one
@@ -29,6 +32,9 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Shared demo audio, served statically so seeded projects never touch R2
+app.use('/demo-audio', express.static(path.join(__dirname, 'seed/demo-audio')));
 
 // Routes
 app.use('/api/auth', authRoutes);

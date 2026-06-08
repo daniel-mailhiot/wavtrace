@@ -8,12 +8,9 @@ import DiffWaveform from '../components/DiffWaveform';
 import { CompareIcon } from '../components/icons';
 import initials from '../utils/initials';
 import { getProject, getCachedProject } from '../api/projects';
-import { DIFF_VERSIONS, computeDiff, isAnalyzed } from '../mocks/diff';
-import v1 from '../assets/audio-demo-V1.wav';
-import v2 from '../assets/audio-demo-V2.wav';
-import v3 from '../assets/audio-demo-V3.wav';
-
-const CLIPS = { v1, v2, v3 };
+import { listVersions } from '../api/versions';
+import { diffMetadata } from '../utils/formatMetadata';
+import { computeDiff } from '../mocks/diff';
 
 const TONE_COLOR = {
   accent: 'var(--accent)',
@@ -44,7 +41,7 @@ function Caret({ open }) {
   );
 }
 
-function VersionSelect({ value, onChange, accent = false }) {
+function VersionSelect({ value, options, onChange, accent = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -65,8 +62,10 @@ function VersionSelect({ value, onChange, accent = false }) {
     ? { color: 'var(--accent)', borderColor: 'var(--accent-line)', background: 'var(--accent-soft)' }
     : undefined;
 
-  function pick(v) {
-    onChange(v);
+  const current = options.find((o) => o.id === value);
+
+  function pick(id) {
+    onChange(id);
     setOpen(false);
   }
 
@@ -80,22 +79,22 @@ function VersionSelect({ value, onChange, accent = false }) {
         onClick={() => setOpen((o) => !o)}
         style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...accentStyle }}
       >
-        {value}
+        {current?.label}
         <Caret open={open} />
       </button>
 
       {open && (
         <div className="wt-menu" role="listbox">
-          {DIFF_VERSIONS.map((v) => (
+          {options.map((o) => (
             <button
-              key={v}
+              key={o.id}
               type="button"
               role="option"
-              aria-selected={v === value}
-              className={'wt-menu-item' + (v === value ? ' active' : '')}
-              onClick={() => pick(v)}
+              aria-selected={o.id === value}
+              className={'wt-menu-item' + (o.id === value ? ' active' : '')}
+              onClick={() => pick(o.id)}
             >
-              {v}
+              {o.label}
             </button>
           ))}
         </div>
@@ -104,12 +103,12 @@ function VersionSelect({ value, onChange, accent = false }) {
   );
 }
 
-function VsHeader({ aVer, bVer, onA, onB, pending }) {
+function VsHeader({ options, aId, bId, onA, onB, pending }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <VersionSelect value={aVer} onChange={onA} />
+      <VersionSelect value={aId} options={options} onChange={onA} />
       <span className="mono faint" style={{ fontSize: 16 }}>→</span>
-      <VersionSelect value={bVer} onChange={onB} accent />
+      <VersionSelect value={bId} options={options} onChange={onB} accent />
       <span className="wt-grow" />
       {pending ? <Pill tone="warn">analysis pending</Pill> : <Pill tone="ok">both analyzed</Pill>}
     </div>
@@ -226,16 +225,39 @@ export default function DiffScreen() {
   const { id } = useParams();
   const { user } = useAuth();
   const [project, setProject] = useState(() => getCachedProject(id));
-  const [aVer, setAVer] = useState('v2');
-  const [bVer, setBVer] = useState('v3');
+  const [versions, setVersions] = useState([]);
+  const [versionsLoaded, setVersionsLoaded] = useState(false);
+  const [aId, setAId] = useState(null);
+  const [bId, setBId] = useState(null);
 
   useEffect(() => {
     getProject(id).then(setProject).catch(() => {});
   }, [id]);
 
-  // Waveforms are peak data but metadata diff needs both sides analyzed
-  const pendingVer = !isAnalyzed(bVer) ? bVer : !isAnalyzed(aVer) ? aVer : null;
-  const rows = pendingVer ? [] : computeDiff(aVer, bVer);
+  // Default to comparing the two newest, the list comes back newest first
+  useEffect(() => {
+    listVersions(id)
+      .then((data) => {
+        setVersions(data);
+        setBId(data[0]?._id ?? null);
+        setAId((data[1] ?? data[0])?._id ?? null);
+      })
+      .catch(() => {})
+      .finally(() => setVersionsLoaded(true));
+  }, [id]);
+
+  const options = versions.map((v) => ({ id: v._id, label: `v${v.versionNumber}` }));
+  const aVersion = versions.find((v) => v._id === aId) ?? null;
+  const bVersion = versions.find((v) => v._id === bId) ?? null;
+  const vlabel = (v) => (v ? `v${v.versionNumber}` : '');
+
+  // Waveforms draw from peak data but the metadata diff needs both sides analyzed
+  const ready = (v) => v?.analysisStatus === 'ready';
+  const pendingVer = !ready(bVersion) ? bVersion : !ready(aVersion) ? aVersion : null;
+  const rows =
+    ready(aVersion) && ready(bVersion)
+      ? computeDiff(diffMetadata(aVersion), diffMetadata(bVersion))
+      : [];
   const fileName = `${slug(project?.name)}.metadata`;
 
   return (
@@ -250,28 +272,40 @@ export default function DiffScreen() {
       />
 
       <div style={{ flex: 1, overflow: 'auto', padding: '28px 30px 40px' }}>
-        <VsHeader aVer={aVer} bVer={bVer} onA={setAVer} onB={setBVer} pending={Boolean(pendingVer)} />
-
-        <div className="wt-diff-top">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-              <Eyebrow style={{ margin: 0 }}>Waveform overlay</Eyebrow>
-              <span className="wt-grow" />
-              <Legend aVer={aVer} />
-            </div>
-            <DiffWaveform baselineUrl={CLIPS[aVer]} compareUrl={CLIPS[bVer]} />
-          </div>
-
-          {pendingVer ? <PendingDiff version={pendingVer} /> : <CompareCard aVer={aVer} bVer={bVer} rows={rows} />}
-        </div>
-
-        {!pendingVer && (
+        {!versionsLoaded ? (
+          <p className="mono dim" style={{ fontSize: 13 }}>Loading versions…</p>
+        ) : versions.length < 2 ? (
+          <p className="mono dim" style={{ fontSize: 13 }}>Need at least two versions to compare</p>
+        ) : (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '30px 0 12px' }}>
-              <Eyebrow>Full metadata diff</Eyebrow>
-              <span className="wt-divsoft" style={{ flex: 1 }} />
+            <VsHeader options={options} aId={aId} bId={bId} onA={setAId} onB={setBId} pending={Boolean(pendingVer)} />
+
+            <div className="wt-diff-top">
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                  <Eyebrow style={{ margin: 0 }}>Waveform overlay</Eyebrow>
+                  <span className="wt-grow" />
+                  <Legend aVer={vlabel(aVersion)} />
+                </div>
+                <DiffWaveform baselineUrl={aVersion.url} compareUrl={bVersion.url} />
+              </div>
+
+              {pendingVer ? (
+                <PendingDiff version={vlabel(pendingVer)} />
+              ) : (
+                <CompareCard aVer={vlabel(aVersion)} bVer={vlabel(bVersion)} rows={rows} />
+              )}
             </div>
-            <UnifiedDiff fileName={fileName} aVer={aVer} bVer={bVer} rows={rows} />
+
+            {!pendingVer && (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '30px 0 12px' }}>
+                  <Eyebrow>Full metadata diff</Eyebrow>
+                  <span className="wt-divsoft" style={{ flex: 1 }} />
+                </div>
+                <UnifiedDiff fileName={fileName} aVer={vlabel(aVersion)} bVer={vlabel(bVersion)} rows={rows} />
+              </>
+            )}
           </>
         )}
       </div>

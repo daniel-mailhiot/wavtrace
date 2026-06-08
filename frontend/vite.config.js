@@ -8,6 +8,7 @@ export default defineConfig({
     // Forward API calls to the backend so the session cookie stays first-party in dev
     proxy: {
       '/api': 'http://localhost:5000',
+      '/demo-audio': 'http://localhost:5000',
     },
   },
 })

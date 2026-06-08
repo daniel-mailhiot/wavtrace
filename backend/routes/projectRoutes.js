@@ -1,6 +1,8 @@
 import express from 'express';
 import requireAuth from '../middleware/auth.js';
 import requireProjectRole from '../middleware/projectRole.js';
+import loadVersion from '../middleware/loadVersion.js';
+import loadComment from '../middleware/loadComment.js';
 import {
   createProject,
   listProjects,
@@ -11,6 +13,8 @@ import {
   updateMember,
   removeMember
 } from '../controllers/projectController.js';
+import { listVersions } from '../controllers/versionController.js';
+import { listComments, createComment, deleteComment } from '../controllers/commentController.js';
 
 const router = express.Router();
 
@@ -25,5 +29,11 @@ router.delete('/:id', requireProjectRole('owner'), deleteProject);
 router.post('/:id/members', requireProjectRole('owner'), addMember);
 router.patch('/:id/members/:userId', requireProjectRole('owner'), updateMember);
 router.delete('/:id/members/:userId', requireProjectRole('owner'), removeMember);
+
+router.get('/:id/versions', requireProjectRole(), listVersions);
+
+router.get('/:id/versions/:versionId/comments', requireProjectRole(), loadVersion, listComments);
+router.post('/:id/versions/:versionId/comments', requireProjectRole('owner', 'reviewer'), loadVersion, createComment);
+router.delete('/:id/versions/:versionId/comments/:commentId', requireProjectRole(), loadVersion, loadComment, deleteComment);
 
 export default router;

@@ -1,6 +1,6 @@
 import Eyebrow from '../Eyebrow';
 import Pill from '../Pill';
-import { PV_LOUDNESS, PV_FILE } from '../../mocks/projectView';
+import { panelMetadata } from '../../utils/formatMetadata';
 
 // Meter placing loudness in a -30 to -6 LUFS window with a target of -14
 function LoudnessMeter({ value }) {
@@ -40,13 +40,12 @@ function StatePanel({ title, detail, bad }) {
   );
 }
 
-// PV_LOUDNESS is temp
-function ReadyMetrics() {
-  const { loudness, truePeak, lra } = PV_LOUDNESS;
+function ReadyMetrics({ version }) {
+  const { hero, file } = panelMetadata(version);
   const heroes = [
-    { k: 'Loudness', v: loudness, u: 'LUFS', meter: true },
-    { k: 'True peak', v: truePeak, u: 'dB', tone: 'ok' },
-    { k: 'Loudness range', v: lra, u: 'LU' },
+    { k: 'Loudness', v: hero.loudness, u: 'LUFS', meter: true },
+    { k: 'True peak', v: hero.truePeak, u: 'dB', tone: 'ok' },
+    { k: 'Loudness range', v: hero.lra, u: 'LU' },
     { k: 'Clipping', chip: true },
   ];
 
@@ -58,7 +57,7 @@ function ReadyMetrics() {
             <div className="faint mono" style={{ fontSize: 10.5, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{h.k}</div>
             {h.chip ? (
               <div style={{ marginTop: 8 }}>
-                <Pill tone="ok">✓ none</Pill>
+                <Pill tone={hero.clipping ? 'bad' : 'ok'}>{hero.clipping ? 'clipping' : 'no clipping detected'}</Pill>
               </div>
             ) : (
               <div className="mono" style={{ fontSize: 24, marginTop: 6, color: h.tone === 'ok' ? 'var(--ok)' : 'var(--ink)', display: 'flex', alignItems: 'baseline', gap: 5 }}>
@@ -73,12 +72,12 @@ function ReadyMetrics() {
 
       <div className="wt-card-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '6px 0', marginTop: 10 }}>
         <div style={{ borderRight: '1px solid var(--line-soft)' }}>
-          {PV_FILE.slice(0, 3).map(([k, v]) => (
+          {file.slice(0, 3).map(([k, v]) => (
             <LeaderRow key={k} label={k} value={v} />
           ))}
         </div>
         <div>
-          {PV_FILE.slice(3).map(([k, v]) => (
+          {file.slice(3).map(([k, v]) => (
             <LeaderRow key={k} label={k} value={v} />
           ))}
         </div>
@@ -87,7 +86,8 @@ function ReadyMetrics() {
   );
 }
 
-export default function MetadataPanel({ status = 'ready' }) {
+export default function MetadataPanel({ version }) {
+  const status = version?.status ?? 'ready';
   const badge = STATUS_PILL[status] ?? STATUS_PILL.ready;
 
   return (
@@ -102,7 +102,7 @@ export default function MetadataPanel({ status = 'ready' }) {
       {status === 'failed' && (
         <StatePanel bad title="Couldn't analyze this file" detail="Re-upload the version to run analysis again" />
       )}
-      {status !== 'processing' && status !== 'failed' && <ReadyMetrics />}
+      {status !== 'processing' && status !== 'failed' && <ReadyMetrics version={version} />}
     </div>
   );
 }

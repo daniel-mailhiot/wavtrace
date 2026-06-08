@@ -8,21 +8,48 @@ import VersionHistory from '../components/ProjectView/VersionHistory';
 import MetadataPanel from '../components/ProjectView/MetadataPanel';
 import CommentsRail from '../components/ProjectView/CommentsRail';
 import initials from '../utils/initials';
+import relativeTime from '../utils/relativeTime';
+import formatTime from '../utils/formatTime';
 import { getProject, deleteProject, getCachedProject } from '../api/projects';
-import { PV_VERSIONS, PV_COMMENTS_BY_VERSION } from '../mocks/projectView';
-import v1 from '../assets/audio-demo-V1.wav';
-import v2 from '../assets/audio-demo-V2.wav';
-import v3 from '../assets/audio-demo-V3.wav';
+import { listVersions } from '../api/versions';
+import { listComments, createComment, deleteComment } from '../api/comments';
 import RenameProjectModal from '../modals/RenameProjectModal';
 import CollaboratorsModal from '../modals/CollaboratorsModal';
 import ConfirmDialog from '../modals/ConfirmDialog';
 import UploadVersionModal from '../modals/UploadVersionModal';
 
-// Temp audio, uploaded versions reuse the latest clip since there's no upload backend yet...
-const CLIPS = { v1, v2, v3 };
-const clipFor = (v) => CLIPS[v] || v3;
-
 const fractionOf = (c) => (c.region ? c.region[0] : c.t);
+
+// Map an API version to the fields the UI reads
+function adaptVersion(v, userId) {
+  const ready = v.analysisStatus === 'ready';
+  const mb = `${(v.size / (1024 * 1024)).toFixed(1)} MB`;
+  return {
+    _id: v._id,
+    v: `v${v.versionNumber}`,
+    file: v.originalName,
+    who: v.uploaderId?._id === userId ? 'uploaded by you' : `uploaded by ${v.uploaderId?.name}`,
+    when: relativeTime(v.createdAt),
+    meta: ready ? `${formatTime(v.analysis.durationSec)} · ${mb}` : mb,
+    status: v.analysisStatus,
+    url: v.url,
+    analysis: v.analysis,
+    size: v.size,
+  };
+}
+
+// Comments are stored in seconds but rail and waveform use fractions
+function adaptComment(c, dur) {
+  const base = {
+    id: c._id,
+    who: c.authorId.name,
+    av: initials(c.authorId.name),
+    text: c.body,
+    author: c.authorId._id, // used for the author-only delete control
+  };
+  if (c.endTime == null) return { ...base, t: c.startTime / dur };
+  return { ...base, region: [c.startTime / dur, c.endTime / dur] };
+}
 
 // Number comments by time so pins and cards stay in sync top to bottom
 function numberComments(comments) {
@@ -43,9 +70,10 @@ export default function ProjectViewScreen() {
   const [deleting, setDeleting] = useState(false);
 
   // Review and commenting state (waveform reached through wsRef)
-  const [versions, setVersions] = useState(PV_VERSIONS);
-  const [currentVersion, setCurrentVersion] = useState('v3');
-  const [commentsByVersion, setCommentsByVersion] = useState(PV_COMMENTS_BY_VERSION);
+  const [versions, setVersions] = useState([]);
+  const [versionsLoaded, setVersionsLoaded] = useState(false);
+  const [currentId, setCurrentId] = useState(null); // selected version by _id
+  const [comments, setComments] = useState([]); // raw API comments for the current version
   const [activeId, setActiveId] = useState(null);
   const [draft, setDraft] = useState(null); // pending { t } or { region } from a wave click/drag
   const [text, setText] = useState('');
@@ -54,13 +82,14 @@ export default function ProjectViewScreen() {
   const [expanded, setExpanded] = useState(false);
   const wsRef = useRef(null);
 
-  const numberedComments = useMemo(
-    () => numberComments(commentsByVersion[currentVersion] ?? []),
-    [commentsByVersion, currentVersion]
-  );
+  const currentVersion = versions.find((v) => v._id === currentId) ?? null;
+  // Prefer the analyzed duration but fall back to the decoded one before analysis is done
+  const dur = currentVersion?.analysis?.durationSec || duration || 1;
 
-  // Analysis state of the selected version that sets what the metadata panel shows
-  const currentStatus = versions.find((v) => v.v === currentVersion)?.status ?? 'ready';
+  const numberedComments = useMemo(
+    () => numberComments(comments.map((c) => adaptComment(c, dur))),
+    [comments, dur]
+  );
 
   useEffect(() => {
     getProject(id)
@@ -68,6 +97,26 @@ export default function ProjectViewScreen() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  // Load the project's versions and select the latest one
+  useEffect(() => {
+    listVersions(id)
+      .then((data) => {
+        const adapted = data.map((v) => adaptVersion(v, user?.id));
+        setVersions(adapted);
+        setCurrentId(adapted[0]?._id ?? null);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setVersionsLoaded(true));
+  }, [id, user?.id]);
+
+  // Load the selected version's comments and re-fetched whenever the version changes
+  useEffect(() => {
+    if (!currentId) return;
+    listComments(id, currentId)
+      .then(setComments)
+      .catch(() => setComments([]));
+  }, [id, currentId]);
 
   // Spacebar play/pause (not while typing a comment)
   useEffect(() => {
@@ -85,58 +134,70 @@ export default function ProjectViewScreen() {
   const myRole = project?.members.find((m) => m.userId?._id === user?.id)?.role;
   const isOwner = myRole === 'owner';
 
-  // Waveform reports its instance once - use for play pill + seeking
+  // Waveform reports its instance once used for seeking
   const handleReady = useCallback((ws) => {
     wsRef.current = ws;
   }, []);
 
-  function selectVersion(v) {
-    if (v === currentVersion) return;
-    setCurrentVersion(v);
+  function selectVersion(versionId) {
+    if (versionId === currentId) return;
+    setCurrentId(versionId);
     setActiveId(null);
     setDraft(null);
     setText('');
+    setComments([]); // the fetch effect reloads for the new version
   }
 
-  // On card click, highlight and seek the playhead to its time
+  // On card click highlight and seek the playhead to its time
   function selectComment(comment) {
     setActiveId(comment.id);
     wsRef.current?.seekTo(fractionOf(comment));
   }
 
-  function addComment() {
+  async function addComment() {
     if (!draft || !text.trim()) return;
-    const comment = {
-      id: crypto.randomUUID(),
-      who: user?.name || 'You',
-      av: initials(user?.name),
-      text: text.trim(),
-      ...(draft.region ? { region: draft.region } : { t: draft.t }),
-    };
-    setCommentsByVersion((prev) => ({
-      ...prev,
-      [currentVersion]: [...(prev[currentVersion] ?? []), comment],
-    }));
-    setActiveId(comment.id);
-    setDraft(null);
-    setText('');
+    // Reverse of adaptComment so multiply the draft fractions by dur to get seconds
+    const startTime = (draft.region ? draft.region[0] : draft.t) * dur;
+    const endTime = draft.region ? draft.region[1] * dur : null;
+    try {
+      const saved = await createComment(id, currentId, { body: text.trim(), startTime, endTime });
+      setComments((prev) => [...prev, saved]);
+      setActiveId(saved._id);
+      setDraft(null);
+      setText('');
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    }
   }
 
-  // Mock upload (temp)
-  // An actual upload should start as 'processing' until the analysis backend reports back,
-  // since there's nothing to analyze yet it goes straight to 'ready'
+  async function removeComment(commentId) {
+    try {
+      await deleteComment(id, currentId, commentId);
+      setComments((prev) => prev.filter((c) => c._id !== commentId));
+      setActiveId((cur) => (cur === commentId ? null : cur));
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+    }
+  }
+
+// Mock upload until the upload backend is implemented
+// Reuses the latest version's clip and analysis for now
   function handleUpload(file) {
-    const v = `v${versions.length + 1}`;
+    const latest = versions[0];
     const newVersion = {
-      v,
+      _id: crypto.randomUUID(),
+      v: `v${versions.length + 1}`,
       file: file.name,
       who: 'uploaded by you',
       when: 'just now',
       meta: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
       status: 'ready',
+      url: latest?.url,
+      analysis: latest?.analysis,
+      size: file.size,
     };
     setVersions((prev) => [newVersion, ...prev]);
-    setCurrentVersion(v);
+    setCurrentId(newVersion._id);
     setActiveId(null);
     setDraft(null);
     setText('');
@@ -193,34 +254,42 @@ export default function ProjectViewScreen() {
             onDelete={() => setModal('delete')}
           />
 
-          <div style={{ height: 22 }} />
-          <VersionHistory
-            versions={versions}
-            selected={currentVersion}
-            expanded={expanded}
-            onToggleExpand={() => setExpanded((v) => !v)}
-            playing={playing}
-            onTogglePlay={() => wsRef.current?.playPause()}
-            onSelectVersion={selectVersion}
-            onDiff={() => navigate(`/projects/${id}/diff`)}
-            onNewVersion={() => setModal('upload')}
-          />
+          {!versionsLoaded ? (
+            <p className="mono dim" style={{ fontSize: 13, marginTop: 22 }}>Loading versions…</p>
+          ) : !currentVersion ? (
+            <p className="mono dim" style={{ fontSize: 13, marginTop: 22 }}>No versions yet</p>
+          ) : (
+            <>
+              <div style={{ height: 22 }} />
+              <VersionHistory
+                versions={versions}
+                selected={currentId}
+                expanded={expanded}
+                onToggleExpand={() => setExpanded((v) => !v)}
+                playing={playing}
+                onTogglePlay={() => wsRef.current?.playPause()}
+                onSelectVersion={selectVersion}
+                onDiff={() => navigate(`/projects/${id}/diff`)}
+                onNewVersion={() => setModal('upload')}
+              />
 
-          <div style={{ height: 22 }} />
-          <Waveform
-            url={clipFor(currentVersion)}
-            comments={numberedComments}
-            activeId={activeId}
-            draft={draft}
-            onReady={handleReady}
-            onPlayingChange={setPlaying}
-            onDuration={setDuration}
-            onPick={setDraft}
-            onSelect={setActiveId}
-          />
+              <div style={{ height: 22 }} />
+              <Waveform
+                url={currentVersion.url}
+                comments={numberedComments}
+                activeId={activeId}
+                draft={draft}
+                onReady={handleReady}
+                onPlayingChange={setPlaying}
+                onDuration={setDuration}
+                onPick={setDraft}
+                onSelect={setActiveId}
+              />
 
-          <div style={{ height: 26 }} />
-          <MetadataPanel status={currentStatus} />
+              <div style={{ height: 26 }} />
+              <MetadataPanel version={currentVersion} />
+            </>
+          )}
         </div>
 
         <CommentsRail
@@ -229,9 +298,11 @@ export default function ProjectViewScreen() {
           duration={duration}
           draft={draft}
           text={text}
+          currentUserId={user?.id}
           onSelect={selectComment}
           onText={setText}
           onSubmit={addComment}
+          onDelete={removeComment}
         />
       </div>
 
