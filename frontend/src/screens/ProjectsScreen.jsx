@@ -138,9 +138,7 @@ export default function ProjectsScreen() {
                     </div>
                     <Role role={role} />
                     <span className="mono faint" style={{ fontSize: 13 }}>{p.versionCount || '-'}</span>
-                    <span className="mono faint" style={{ fontSize: 12.5 }}>
-                      {ago === 'just now' ? ago : `${ago} ago`}
-                    </span>
+                    <span className="mono faint" style={{ fontSize: 12.5 }}>{ago}</span>
                     <AvatarStack>
                       {p.members.map((m) => (
                         <Avatar key={m.userId?._id} size={20} title={m.userId?.name}>

@@ -14,7 +14,7 @@ export default function relativeTime(date) {
 
   for (const [label, secs] of units) {
     const value = Math.floor(seconds / secs);
-    if (value >= 1) return `${value}${label}`;
+    if (value >= 1) return `${value}${label} ago`;
   }
   return 'just now';
 }
