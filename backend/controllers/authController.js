@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import passport from 'passport';
 import User from '../models/User.js';
+import { seedDemoProject } from '../seed/demoProject.js';
 
 // POST /api/auth/register
 export const register = async (req, res) => {
@@ -18,8 +19,14 @@ export const register = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, passwordHash });
 
-    req.login(user, (err) => {
+    req.login(user, async (err) => {
       if (err) return res.status(500).json({ message: 'Server error' });
+      // Seed a populated demo project and keep signup working even if it throws
+      try {
+        await seedDemoProject(user._id);
+      } catch (seedErr) {
+        console.error('Demo seed failed:', seedErr);
+      }
       res.status(201).json({ id: user._id, name: user.name, email: user.email });
     });
   } catch (err) {
