@@ -138,8 +138,7 @@ export default function ProjectsScreen() {
                       <span style={{ fontSize: 14.5, fontWeight: 600 }}>{p.name}</span>
                     </div>
                     <Role role={role} />
-                    {/* No version count until uploads exist */}
-                    <span className="mono faint" style={{ fontSize: 13 }}>—</span>
+                    <span className="mono faint" style={{ fontSize: 13 }}>{p.versionCount || '-'}</span>
                     <span className="mono faint" style={{ fontSize: 12.5 }}>
                       {ago === 'just now' ? ago : `${ago} ago`}
                     </span>

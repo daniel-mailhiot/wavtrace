@@ -1,5 +1,6 @@
 import Project from '../models/Project.js';
 import User from '../models/User.js';
+import Version from '../models/Version.js';
 
 // POST /api/projects
 export const createProject = async (req, res) => {
@@ -28,7 +29,15 @@ export const listProjects = async (req, res) => {
     const projects = await Project.find({ 'members.userId': req.user._id })
       .populate('members.userId', 'name email')
       .sort({ updatedAt: -1 });
-    res.json(projects);
+
+    const withCounts = await Promise.all(
+      projects.map(async (p) => ({
+        ...p.toObject(),
+        versionCount: await Version.countDocuments({ projectId: p._id }),
+      }))
+    );
+
+    res.json(withCounts);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
