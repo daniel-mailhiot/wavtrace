@@ -111,7 +111,8 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 /* Pills/tags */
 .wt-pill { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono);
   font-size: 11px; padding: 3px 9px; border-radius: 30px; background: var(--panel-3);
-  color: var(--ink-dim); border: 1px solid var(--line); white-space: nowrap; line-height: 1.4; }
+  color: var(--ink-dim); border: 1px solid var(--line); white-space: nowrap; line-height: 1.4;
+  text-transform: none; }
 .wt-pill.accent, .wt-pill.owner { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
 .wt-pill.rev { background: var(--rev-soft); color: var(--rev); border-color: var(--rev-line); }
 .wt-pill.ok { background: var(--ok-soft); color: var(--ok); border-color: var(--ok-line); }
@@ -145,6 +146,12 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-wave ::part(cursor) { box-shadow: 0 0 10px var(--accent-glow); }
 .wt-wave ::part(region) { border-left: 1.5px dashed var(--accent-line); border-right: 1.5px dashed var(--accent-line); }
 .wt-wave-wrap { position: relative; }
+/* Empty-project upload prompt sitting where the waveform would be */
+.wt-wave-empty { width: 100%; min-height: 196px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 13px; text-align: center;
+  background: var(--panel-2); border: 1.5px dashed var(--line); border-radius: var(--r-md);
+  cursor: pointer; transition: 0.14s; }
+.wt-wave-empty:hover { border-color: var(--accent-line); background: var(--accent-softer); }
 .wt-mk-rail { position: relative; height: 24px; margin-bottom: 7px; }
 .wt-mk { position: absolute; bottom: 0; width: 20px; height: 20px; border-radius: 50%;
   transform: translateX(-50%); background: var(--accent); color: var(--accent-ink);

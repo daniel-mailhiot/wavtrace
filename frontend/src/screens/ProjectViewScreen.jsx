@@ -7,6 +7,7 @@ import ProjectHeader from '../components/ProjectView/ProjectHeader';
 import VersionHistory from '../components/ProjectView/VersionHistory';
 import MetadataPanel from '../components/ProjectView/MetadataPanel';
 import CommentsRail from '../components/ProjectView/CommentsRail';
+import EmptyProject from '../components/ProjectView/EmptyProject';
 import initials from '../utils/initials';
 import relativeTime from '../utils/relativeTime';
 import formatTime from '../utils/formatTime';
@@ -257,7 +258,7 @@ export default function ProjectViewScreen() {
           {!versionsLoaded ? (
             <p className="mono dim" style={{ fontSize: 13, marginTop: 22 }}>Loading versions…</p>
           ) : !currentVersion ? (
-            <p className="mono dim" style={{ fontSize: 13, marginTop: 22 }}>No versions yet</p>
+            <EmptyProject onUpload={() => setModal('upload')} />
           ) : (
             <>
               <div style={{ height: 22 }} />

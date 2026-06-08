@@ -111,6 +111,7 @@ function SelectedFile({ file, onRemove }) {
 export default function UploadVersionModal({ versions, projectName, onClose, onUpload }) {
   const [file, setFile] = useState(null);
   const [error, setError] = useState('');
+  const isFirst = versions.length === 0;
   const nextLabel = `v${versions.length + 1}`;
 
   function pick(picked) {
@@ -126,7 +127,7 @@ export default function UploadVersionModal({ versions, projectName, onClose, onU
 
   return (
     <ModalFrame onClose={onClose} width={560}>
-      <ModalHead title="Upload next version" sub={projectName} onClose={onClose} />
+      <ModalHead title={isFirst ? 'Upload first version' : 'Upload next version'} sub={projectName} onClose={onClose} />
 
       <div style={{ display: 'flex', gap: 24, padding: '22px 28px 6px', alignItems: 'stretch' }}>
         <UploadHistory versions={versions} nextLabel={nextLabel} ready={Boolean(file)} />
