@@ -1,6 +1,7 @@
 import Pill from '../Pill';
 import Button from '../Button';
 import { Avatar } from '../Avatar';
+import { TrashIcon } from '../icons';
 import formatTime from '../../utils/formatTime';
 
 // Comment's fraction to timecode, range for regions
@@ -12,7 +13,8 @@ function timecode(comment, duration) {
 }
 
 // Numbered node (circle for points, rounded square for regions)
-function CommentCard({ comment, active, duration, onClick }) {
+// Trash button only renders on the viewer's own comments (author-only delete)
+function CommentCard({ comment, active, duration, canDelete, onDelete, onClick }) {
   const isRegion = Boolean(comment.region);
   const time = timecode(comment, duration);
   return (
@@ -25,6 +27,19 @@ function CommentCard({ comment, active, duration, onClick }) {
           <Pill tone="accent" style={{ marginLeft: 'auto' }}>
             {isRegion ? time : '@ ' + time}
           </Pill>
+          {canDelete && (
+            <button
+              type="button"
+              className="wt-cdel"
+              aria-label="Delete comment"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(comment.id);
+              }}
+            >
+              <TrashIcon />
+            </button>
+          )}
         </div>
         <div className="wt-ctext">{comment.text}</div>
       </div>
@@ -72,7 +87,7 @@ function AddComment({ draft, text, duration, onText, onSubmit }) {
   );
 }
 
-export default function CommentsRail({ comments, activeId, duration, draft, text, onSelect, onText, onSubmit }) {
+export default function CommentsRail({ comments, activeId, duration, draft, text, currentUserId, onSelect, onText, onSubmit, onDelete }) {
   return (
     <div className="wt-pv-rail">
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
@@ -89,6 +104,8 @@ export default function CommentsRail({ comments, activeId, duration, draft, text
             comment={c}
             active={activeId === c.id}
             duration={duration}
+            canDelete={c.author === currentUserId}
+            onDelete={onDelete}
             onClick={() => onSelect(c)}
           />
         ))}

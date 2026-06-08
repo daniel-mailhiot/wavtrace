@@ -12,7 +12,7 @@ import relativeTime from '../utils/relativeTime';
 import formatTime from '../utils/formatTime';
 import { getProject, deleteProject, getCachedProject } from '../api/projects';
 import { listVersions } from '../api/versions';
-import { PV_COMMENTS_BY_VERSION } from '../mocks/projectView';
+import { listComments, createComment, deleteComment } from '../api/comments';
 import RenameProjectModal from '../modals/RenameProjectModal';
 import CollaboratorsModal from '../modals/CollaboratorsModal';
 import ConfirmDialog from '../modals/ConfirmDialog';
@@ -38,6 +38,19 @@ function adaptVersion(v, userId) {
   };
 }
 
+// Comments are stored in seconds but rail and waveform use fractions
+function adaptComment(c, dur) {
+  const base = {
+    id: c._id,
+    who: c.authorId.name,
+    av: initials(c.authorId.name),
+    text: c.body,
+    author: c.authorId._id, // used for the author-only delete control
+  };
+  if (c.endTime == null) return { ...base, t: c.startTime / dur };
+  return { ...base, region: [c.startTime / dur, c.endTime / dur] };
+}
+
 // Number comments by time so pins and cards stay in sync top to bottom
 function numberComments(comments) {
   return [...comments]
@@ -60,7 +73,7 @@ export default function ProjectViewScreen() {
   const [versions, setVersions] = useState([]);
   const [versionsLoaded, setVersionsLoaded] = useState(false);
   const [currentId, setCurrentId] = useState(null); // selected version by _id
-  const [commentsByVersion, setCommentsByVersion] = useState(PV_COMMENTS_BY_VERSION);
+  const [comments, setComments] = useState([]); // raw API comments for the current version
   const [activeId, setActiveId] = useState(null);
   const [draft, setDraft] = useState(null); // pending { t } or { region } from a wave click/drag
   const [text, setText] = useState('');
@@ -70,11 +83,12 @@ export default function ProjectViewScreen() {
   const wsRef = useRef(null);
 
   const currentVersion = versions.find((v) => v._id === currentId) ?? null;
+  // Prefer the analyzed duration but fall back to the decoded one before analysis is done
+  const dur = currentVersion?.analysis?.durationSec || duration || 1;
 
-  // Comments still use mock data keyed by version label for now
   const numberedComments = useMemo(
-    () => numberComments(commentsByVersion[currentVersion?.v] ?? []),
-    [commentsByVersion, currentVersion]
+    () => numberComments(comments.map((c) => adaptComment(c, dur))),
+    [comments, dur]
   );
 
   useEffect(() => {
@@ -95,6 +109,14 @@ export default function ProjectViewScreen() {
       .catch((err) => setError(err.message))
       .finally(() => setVersionsLoaded(true));
   }, [id, user?.id]);
+
+  // Load the selected version's comments and re-fetched whenever the version changes
+  useEffect(() => {
+    if (!currentId) return;
+    listComments(id, currentId)
+      .then(setComments)
+      .catch(() => setComments([]));
+  }, [id, currentId]);
 
   // Spacebar play/pause (not while typing a comment)
   useEffect(() => {
@@ -123,30 +145,39 @@ export default function ProjectViewScreen() {
     setActiveId(null);
     setDraft(null);
     setText('');
+    setComments([]); // the fetch effect reloads for the new version
   }
 
-  // On card click, highlight and seek the playhead to its time
+  // On card click highlight and seek the playhead to its time
   function selectComment(comment) {
     setActiveId(comment.id);
     wsRef.current?.seekTo(fractionOf(comment));
   }
 
-  function addComment() {
+  async function addComment() {
     if (!draft || !text.trim()) return;
-    const comment = {
-      id: crypto.randomUUID(),
-      who: user?.name || 'You',
-      av: initials(user?.name),
-      text: text.trim(),
-      ...(draft.region ? { region: draft.region } : { t: draft.t }),
-    };
-    setCommentsByVersion((prev) => ({
-      ...prev,
-      [currentVersion.v]: [...(prev[currentVersion.v] ?? []), comment],
-    }));
-    setActiveId(comment.id);
-    setDraft(null);
-    setText('');
+    // Reverse of adaptComment so multiply the draft fractions by dur to get seconds
+    const startTime = (draft.region ? draft.region[0] : draft.t) * dur;
+    const endTime = draft.region ? draft.region[1] * dur : null;
+    try {
+      const saved = await createComment(id, currentId, { body: text.trim(), startTime, endTime });
+      setComments((prev) => [...prev, saved]);
+      setActiveId(saved._id);
+      setDraft(null);
+      setText('');
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    }
+  }
+
+  async function removeComment(commentId) {
+    try {
+      await deleteComment(id, currentId, commentId);
+      setComments((prev) => prev.filter((c) => c._id !== commentId));
+      setActiveId((cur) => (cur === commentId ? null : cur));
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+    }
   }
 
 // Mock upload until the upload backend is implemented
@@ -267,9 +298,11 @@ export default function ProjectViewScreen() {
           duration={duration}
           draft={draft}
           text={text}
+          currentUserId={user?.id}
           onSelect={selectComment}
           onText={setText}
           onSubmit={addComment}
+          onDelete={removeComment}
         />
       </div>
 

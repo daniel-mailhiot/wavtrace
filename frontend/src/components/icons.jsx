@@ -58,3 +58,11 @@ export function PlusIcon() {
     </svg>
   );
 }
+
+export function TrashIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" style={{ width: 13, height: 13 }}>
+      <path d="M3 4h10M6.4 4V2.8h3.2V4M4.5 4l.5 9h6l.5-9M6.7 6.4v4.4M9.3 6.4v4.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
