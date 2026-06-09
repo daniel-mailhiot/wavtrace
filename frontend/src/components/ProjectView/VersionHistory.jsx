@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react';
 import Eyebrow from '../Eyebrow';
 import Pill from '../Pill';
 import Button from '../Button';
@@ -83,21 +84,43 @@ function OlderRow({ version, selected, playing, onTogglePlay, onSelect, onDiff }
   );
 }
 
-// Git spine - clicking a version loads its clip into the waveform
+// Git-ish spine
 export default function VersionHistory({ versions, selected, expanded, onToggleExpand, playing, onTogglePlay, onSelectVersion, onDiff, onNewVersion }) {
   const latest = versions[0];
   const older = versions.slice(1).reverse();
-  const latestSelected = selected === latest._id;
+
+  const spineRef = useRef(null);
+  const summaryRef = useRef(null);
+  const rowRefs = useRef({});
+  const wasExpanded = useRef(expanded);
+  const [dotTop, setDotTop] = useState(0);
+  const [glide, setGlide] = useState(false);
+
+  // Move the purple node onto the selected row and fall back to the group node when that row is collapsed
+  useLayoutEffect(() => {
+    const spine = spineRef.current;
+    const target = rowRefs.current[selected] || summaryRef.current;
+    if (!spine || !target) return;
+    const spineBox = spine.getBoundingClientRect();
+    const rowBox = target.getBoundingClientRect();
+    // Glide between selections but snap when expand/collapse shifts the rows so it does not slide in from nowhere
+    setGlide(wasExpanded.current === expanded);
+    wasExpanded.current = expanded;
+    setDotTop(rowBox.top - spineBox.top + rowBox.height / 2);
+  }, [selected, expanded, versions]);
 
   return (
     <div>
       <Eyebrow style={{ marginBottom: 10 }}>Versions</Eyebrow>
-      <div style={{ position: 'relative', paddingLeft: 24 }}>
-        {/* vertical spine connecting the nodes */}
+      <div ref={spineRef} style={{ position: 'relative', paddingLeft: 24 }}>
+        {/* Vertical spine connecting the nodes */}
         <div style={{ position: 'absolute', left: 9, top: 24, bottom: 30, width: 2, background: 'var(--line)' }} />
 
-        {/* older versions have collapsed summary that expands into selectable rows */}
-        <div style={{ position: 'relative' }}>
+        {/* Node that glides to whichever version is selected */}
+        <div style={{ position: 'absolute', left: 4, top: dotTop, width: 14, height: 14, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 0 4px var(--accent-soft)', transform: 'translateY(-50%)', transition: glide ? 'top 0.28s cubic-bezier(0.4, 0, 0.2, 1)' : 'none', zIndex: 2, pointerEvents: 'none' }} />
+
+        {/* Older versions have collapsed summary that expands into selectable rows */}
+        <div ref={summaryRef} style={{ position: 'relative' }}>
           <div style={{ position: 'absolute', left: -19, top: '50%', transform: 'translateY(-50%)', width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--ink-faint)', background: 'var(--board)' }} />
           <div
             onClick={onToggleExpand}
@@ -119,24 +142,25 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
         {expanded && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
             {older.map((v) => (
-              <OlderRow
-                key={v._id}
-                version={v}
-                selected={selected}
-                playing={playing}
-                onTogglePlay={onTogglePlay}
-                onSelect={() => onSelectVersion(v._id)}
-                onDiff={onDiff}
-              />
+              <div key={v._id} ref={(el) => (rowRefs.current[v._id] = el)}>
+                <OlderRow
+                  version={v}
+                  selected={selected}
+                  playing={playing}
+                  onTogglePlay={onTogglePlay}
+                  onSelect={() => onSelectVersion(v._id)}
+                  onDiff={onDiff}
+                />
+              </div>
             ))}
           </div>
         )}
 
         <div style={{ height: 8 }} />
 
-        {/* latest version node */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, borderRadius: '50%', background: latestSelected ? 'var(--accent)' : 'var(--ink-faint)', boxShadow: latestSelected ? '0 0 0 4px var(--accent-soft)' : 'none' }} />
+        {/* Latest version node */}
+        <div ref={(el) => (rowRefs.current[latest._id] = el)} style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', left: -18, top: '50%', transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: 'var(--ink-faint)' }} />
           <LatestRow
             version={latest}
             selected={selected}
