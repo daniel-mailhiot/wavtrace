@@ -24,7 +24,7 @@ function CommentCard({ comment, active, duration, canDelete, onDelete, onClick }
         <div className="wt-crow">
           <Avatar size={20}>{comment.av}</Avatar>
           <span className="wt-cwho">{comment.who}</span>
-          <Pill tone="accent" style={{ marginLeft: 'auto' }}>
+          <Pill tone="plain" style={{ marginLeft: 'auto' }}>
             {isRegion ? time : '@ ' + time}
           </Pill>
           {canDelete && (

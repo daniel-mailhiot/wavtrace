@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import Eyebrow from '../Eyebrow';
 import Pill from '../Pill';
 import Button from '../Button';
@@ -31,14 +30,19 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
           <span className="mono">{version.file}</span>
-          <Pill tone="ok" style={{ fontSize: 10 }}>latest</Pill>
+          <Pill tone="plain" style={{ fontSize: 10 }}>latest</Pill>
           {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */} {/* (disabled) */}
         </div>
         <div className="mono faint" style={{ fontSize: 11.5, marginTop: 2 }}>
           {version.who} {version.when} · {version.meta}
         </div>
       </div>
-      <Button size="sm" variant="accent" onClick={(e) => { e.stopPropagation(); onDiff(); }}>
+      <Button
+        size="sm"
+        variant="primary"
+        style={{ background: 'rgba(168, 123, 255, 0.8)', borderColor: 'rgba(168, 123, 255, 0.8)' }}
+        onClick={(e) => { e.stopPropagation(); onDiff(); }}
+      >
         <CompareIcon /> Diff view
       </Button>
       <Button size="sm" onClick={(e) => { e.stopPropagation(); onNewVersion?.(); }}>
@@ -90,19 +94,13 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
             <span style={{ display: 'flex', alignItems: 'center', gap: 11, flex: 1 }}>
               <span className="mono faint" style={{ fontSize: 11 }}>{expanded ? '▾' : '▸'}</span>
               <span style={{ fontSize: 13, color: 'var(--ink-dim)' }}>{older.length} older versions</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {older.map((v, i) => (
-                  <Fragment key={v._id}>
-                    {i > 0 && <span className="mono faint" style={{ fontSize: 11 }}>·</span>}
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Pill>{v.v}</Pill>
-                      <span className="mono faint" style={{ fontSize: 11 }}>{v.when.replace(' ago', '')}</span>
-                    </span>
-                  </Fragment>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {[...older].reverse().map((v) => (
+                  <Pill key={v._id} style={{ color: 'var(--ink-faint)' }}>{v.v} · {v.when.replace(' ago', '')}</Pill>
                 ))}
               </span>
             </span>
-            <span className="mono" style={{ fontSize: 12, color: 'var(--accent)' }}>{expanded ? 'collapse' : 'expand'}</span>
+            <span className="mono" style={{ fontSize: 12, color: 'var(--ink-dim)' }}>{expanded ? 'collapse' : 'expand'}</span>
           </div>
         </div>
 

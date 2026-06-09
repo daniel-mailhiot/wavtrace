@@ -118,6 +118,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-pill.ok { background: var(--ok-soft); color: var(--ok); border-color: var(--ok-line); }
 .wt-pill.warn { background: var(--warn-soft); color: var(--warn); border-color: var(--warn-line); }
 .wt-pill.bad { background: var(--bad-soft); color: var(--bad); border-color: var(--bad-line); }
+.wt-pill.plain { background: rgba(255, 255, 255, 0.08); color: var(--ink); border-color: var(--ink-faint); }
 .wt-pill.sq { border-radius: 5px; }
 .wt-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
@@ -205,7 +206,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-vrow { display: flex; align-items: center; gap: 13px; padding: 13px 15px;
   border-radius: var(--r-sm); border: 1px solid transparent; }
 .wt-vrow.active { background: var(--accent-soft); border-color: var(--accent-line); }
-.wt-vbadge { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--accent);
+.wt-vbadge { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--ink);
   min-width: 30px; }
 
 /* Generic helpers */
