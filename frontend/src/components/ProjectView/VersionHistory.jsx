@@ -26,8 +26,8 @@ function DiffButton({ onDiff, compact }) {
       size="sm"
       variant="primary"
       style={{
-        background: 'rgba(108, 151, 230, 0.8)',
-        borderColor: 'rgba(108, 151, 230, 0.8)',
+        background: 'rgba(153, 178, 226, 0.8)',
+        borderColor: 'rgba(153, 178, 226, 0.8)',
         ...(compact ? { height: 28, padding: '0 10px', fontSize: 11.5 } : {}),
       }}
       onClick={(e) => { e.stopPropagation(); onDiff(); }}
@@ -117,7 +117,7 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
         <div style={{ position: 'absolute', left: 9, top: 24, bottom: 30, width: 2, background: 'var(--line)' }} />
 
         {/* Node that glides to whichever version is selected */}
-        <div style={{ position: 'absolute', left: 4, top: dotTop, width: 14, height: 14, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 0 4px var(--accent-soft)', transform: 'translateY(-50%)', transition: glide ? 'top 0.28s cubic-bezier(0.4, 0, 0.2, 1)' : 'none', zIndex: 2, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: 4, top: dotTop, width: 14, height: 14, borderRadius: '50%', background: 'var(--accent-3)', boxShadow: '0 0 0 4px var(--accent-3-soft)', transform: 'translateY(-50%)', transition: glide ? 'top 0.28s cubic-bezier(0.4, 0, 0.2, 1)' : 'none', zIndex: 2, pointerEvents: 'none' }} />
 
         {/* Older versions have collapsed summary that expands into selectable rows */}
         <div ref={summaryRef} style={{ position: 'relative' }}>
