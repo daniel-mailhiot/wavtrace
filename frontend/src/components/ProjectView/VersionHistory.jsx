@@ -53,7 +53,7 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
           {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */} {/* (disabled) */}
         </div>
         <div className="mono faint" style={{ fontSize: 11.5, marginTop: 2 }}>
-          {version.who} {version.when} · {version.meta}
+          {version.who} {version.when}
         </div>
       </div>
       {isSelected && <DiffButton onDiff={onDiff} />}
@@ -122,10 +122,7 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
         {/* Older versions have collapsed summary that expands into selectable rows */}
         <div ref={summaryRef} style={{ position: 'relative' }}>
           <div style={{ position: 'absolute', left: -19, top: '50%', transform: 'translateY(-50%)', width: 12, height: 12, borderRadius: '50%', border: '2px solid var(--ink-faint)', background: 'var(--board)' }} />
-          <div
-            onClick={onToggleExpand}
-            style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '11px 14px', border: '1px dashed var(--line)', borderRadius: 8, background: 'var(--panel-2)', cursor: 'pointer' }}
-          >
+          <div className="wt-vsummary" onClick={onToggleExpand}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 11, flex: 1 }}>
               <span className="mono faint" style={{ fontSize: 11 }}>{expanded ? '▾' : '▸'}</span>
               <span style={{ fontSize: 13, color: 'var(--ink-dim)' }}>{older.length} older versions</span>
@@ -135,7 +132,7 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
                 ))}
               </span>
             </span>
-            <span className="mono" style={{ fontSize: 12, color: 'var(--ink-dim)' }}>{expanded ? 'collapse' : 'expand'}</span>
+            <span className="mono wt-vtoggle" style={{ fontSize: 12 }}>{expanded ? 'collapse' : 'expand'}</span>
           </div>
         </div>
 

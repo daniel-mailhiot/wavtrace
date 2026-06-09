@@ -132,7 +132,7 @@ export default function CollaboratorsModal({ project, onClose, onMembersChanged 
                     style={{ display: 'grid', gridTemplateColumns: GRID, gap: 12, alignItems: 'center', padding: '13px 16px', borderBottom: i < members.length - 1 ? '1px solid var(--line-soft)' : 'none' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Avatar size={24} accent={isOwner}>{initials(u.name)}</Avatar>
+                      <Avatar size={24} userId={u._id}>{initials(u.name)}</Avatar>
                       <span style={{ fontSize: 13.5, fontWeight: 600 }}>{u.name}</span>
                     </div>
                     <span className="mono faint" style={{ fontSize: 12.5 }}>{u.email}</span>

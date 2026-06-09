@@ -22,7 +22,7 @@ function CommentCard({ comment, active, duration, canDelete, onDelete, onClick }
       <div className={'wt-cn' + (isRegion ? ' region' : '')}>{comment.n}</div>
       <div className="wt-cbody">
         <div className="wt-crow">
-          <Avatar size={20}>{comment.av}</Avatar>
+          <Avatar size={20} userId={comment.author}>{comment.av}</Avatar>
           <span className="wt-cwho">{comment.who}</span>
           <Pill tone="plain" style={{ marginLeft: 'auto' }}>
             {isRegion ? time : '@ ' + time}

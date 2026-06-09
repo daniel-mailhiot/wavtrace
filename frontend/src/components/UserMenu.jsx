@@ -37,13 +37,13 @@ export default function UserMenu() {
         onClick={() => setOpen((o) => !o)}
         style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'flex' }}
       >
-        <Avatar size={24} accent>{initials(user?.name)}</Avatar>
+        <Avatar size={24} userId={user?._id || user?.id}>{initials(user?.name)}</Avatar>
       </button>
 
       {open && (
         <div className="wt-menu" role="menu" style={{ left: 'auto', right: 0, width: 250, padding: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: 13 }}>
-            <Avatar size={32} accent>{initials(user?.name)}</Avatar>
+            <Avatar size={32} userId={user?._id || user?.id}>{initials(user?.name)}</Avatar>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ink)', ...clip }}>{user?.name}</div>
               <div className="mono faint" style={{ fontSize: 12, ...clip }}>{user?.email}</div>

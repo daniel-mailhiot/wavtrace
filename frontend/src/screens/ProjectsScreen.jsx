@@ -143,7 +143,7 @@ export default function ProjectsScreen() {
                     <span className="mono faint" style={{ fontSize: 12.5 }}>{ago}</span>
                     <AvatarStack>
                       {p.members.map((m) => (
-                        <Avatar key={m.userId?._id} size={20} title={m.userId?.name}>
+                        <Avatar key={m.userId?._id} size={20} userId={m.userId?._id} title={m.userId?.name}>
                           {initials(m.userId?.name)}
                         </Avatar>
                       ))}

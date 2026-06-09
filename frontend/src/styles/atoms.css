@@ -41,7 +41,7 @@ Atom classes (all screens reuse)
 .wt-av { border-radius: 50%; display: grid; place-items: center; flex: none;
   font-family: var(--mono); font-weight: 600; background: var(--panel-3);
   color: var(--ink-dim); border: 1px solid var(--line); }
-.wt-av.accent { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+.wt-av.plain { background: rgba(255, 255, 255, 0.08); color: var(--ink); border-color: rgba(255, 255, 255, 0.25); }
 .wt-av.s20 { width: 28px; height: 28px; font-size: 11px; }
 .wt-av.s24 { width: 30px; height: 30px; font-size: 12px; }
 .wt-av.s32 { width: 38px; height: 38px; font-size: 13px; }
@@ -55,7 +55,8 @@ Atom classes (all screens reuse)
   padding: 0 15px; height: 38px; border-radius: var(--r-sm);
   border: 1px solid var(--line); color: var(--ink-dim); background: var(--panel-2);
   cursor: pointer; white-space: nowrap; transition: 0.14s ease; }
-.wt-btn:hover { border-color: var(--line-hover); color: var(--ink); }
+.wt-btn:hover { border-color: var(--line-hover); color: var(--ink);
+  background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)), var(--panel-2); }
 .wt-btn.p { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .wt-btn.p:hover { filter: brightness(1.08); color: var(--accent-ink); }
 .wt-btn.ghost { background: transparent; }
@@ -118,7 +119,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-pill.ok { background: var(--ok-soft); color: var(--ok); border-color: var(--ok-line); }
 .wt-pill.warn { background: var(--warn-soft); color: var(--warn); border-color: var(--warn-line); }
 .wt-pill.bad { background: var(--bad-soft); color: var(--bad); border-color: var(--bad-line); }
-.wt-pill.plain { background: rgba(255, 255, 255, 0.08); color: var(--ink); border-color: var(--ink-faint); }
+.wt-pill.plain { background: rgba(255, 255, 255, 0.08); color: var(--ink); border-color: rgba(255, 255, 255, 0.25); }
 .wt-pill.sq { border-radius: 5px; }
 .wt-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
@@ -212,6 +213,13 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-vrow.compact { height: 40px; padding-top: 0; padding-bottom: 0; }
 .wt-vbadge { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--ink);
   min-width: 30px; }
+/* older-versions summary, brighter dashed border on hover with no lift */
+.wt-vsummary { display: flex; align-items: center; gap: 11px; padding: 11px 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.22); border-radius: 8px; background: var(--panel-2);
+  cursor: pointer; transition: 0.14s; }
+.wt-vsummary:hover { border-color: rgba(255, 255, 255, 0.4); }
+.wt-vtoggle { color: var(--ink-dim); transition: 0.14s; }
+.wt-vsummary:hover .wt-vtoggle { color: var(--ink); }
 
 /* Generic helpers */
 .wt-div { height: 1px; background: var(--line); }
@@ -219,10 +227,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .mono { font-family: var(--mono); }
 .dim { color: var(--ink-dim); }
 .faint { color: var(--ink-faint); }
-.note { display: flex; align-items: flex-start; gap: 9px; font-family: var(--mono);
-  font-size: 12px; color: var(--accent); line-height: 1.5; }
-.note::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
-  margin-top: 5px; flex: none; }
+.note { font-family: var(--mono); font-size: 12px; color: var(--ink-dim); line-height: 1.5; }
 
 /* thin custom scrollbar inside dark panels */
 .wt ::-webkit-scrollbar { width: 10px; height: 10px; }

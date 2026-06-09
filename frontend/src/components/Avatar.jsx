@@ -1,9 +1,12 @@
-// Round initials avatar, map the numeric prop to the matching class. `accent` marks the current user ("you")
+import { useAuth } from '../auth/AuthContext';
 
 const sizeClass = { 20: 's20', 24: 's24', 32: 's32' };
 
-export function Avatar({ children, size = 24, accent = false, className = '', ...props }) {
-  const cls = ['wt-av', sizeClass[size], accent && 'accent', className]
+export function Avatar({ children, size = 24, userId, className = '', ...props }) {
+  const user = useAuth()?.user;
+  const myId = user?._id || user?.id; // /me sends _id, login and register send id
+  const isMe = Boolean(userId) && userId === myId;
+  const cls = ['wt-av', sizeClass[size], isMe && 'plain', className]
     .filter(Boolean)
     .join(' ');
   return (

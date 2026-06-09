@@ -25,7 +25,7 @@ export default function ProjectHeader({ project, role, isOwner, currentUserId, o
       <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
         <AvatarStack>
           {members.map((m) => (
-            <Avatar key={m.userId?._id} size={24} accent={m.userId?._id === currentUserId} title={m.userId?.name}>
+            <Avatar key={m.userId?._id} size={24} userId={m.userId?._id} title={m.userId?.name}>
               {initials(m.userId?.name)}
             </Avatar>
           ))}
