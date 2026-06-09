@@ -194,6 +194,10 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-cn.region { border-radius: 6px; }
 .wt-cbody { flex: 1; min-width: 0; }
 .wt-crow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+/* Timecode pill reads as a faint outline here, no fill competing with the card */
+.wt-crow .wt-pill { background: none; border-color: rgba(255, 255, 255, 0.12); }
+/* Draft point/region tag keeps its accent text and outline, drops the fill */
+.wt-pill.wt-draft-pill { background: none; }
 .wt-cwho { font-size: 13px; color: var(--ink); font-weight: 600; }
 .wt-cfoot { display: flex; align-items: flex-end; gap: 8px; }
 .wt-ctext { flex: 1; min-width: 0; font-size: 13px; color: var(--ink-dim); line-height: 1.5; }

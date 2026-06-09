@@ -60,7 +60,7 @@ function AddComment({ hasVersion, draft, text, duration, onText, onSubmit }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
       {hasDraft && (
-        <Pill tone="accent" style={{ padding: '6px 11px', fontSize: 12, gap: 7, alignSelf: 'flex-start' }}>
+        <Pill tone="accent" className="wt-draft-pill" style={{ padding: '6px 11px', fontSize: 12, gap: 7, alignSelf: 'flex-start' }}>
           {isRegion ? 'Region' : 'Point'}
           <span className="mono" style={{ opacity: 0.7 }}>{detail}</span>
         </Pill>

@@ -32,7 +32,7 @@ export default function Waveform({
     url,
     height: 180,
     waveColor: '#565a67',
-    progressColor: '#a87bff',
+    progressColor: '#f2f2f2e5',
     cursorColor: '#a87bff',
     barWidth: 2.5,
     barGap: 2,
