@@ -146,7 +146,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
   border-radius: var(--r-md); overflow: hidden; }
 /* wavesurfer renders into a shadow DOM, so its cursor + regions are styled via ::part */
 .wt-wave ::part(cursor) { box-shadow: 0 0 10px var(--accent-glow); }
-.wt-wave ::part(region) { border-left: 1.5px dashed var(--accent-line); border-right: 1.5px dashed var(--accent-line); }
+.wt-wave ::part(region) { border-left: 1.5px dashed var(--accent-2-line); border-right: 1.5px dashed var(--accent-2-line); }
 .wt-wave-wrap { position: relative; }
 /* Empty-project upload prompt sitting where the waveform would be */
 .wt-wave-empty { width: 100%; min-height: 196px; display: flex; flex-direction: column;
@@ -156,14 +156,14 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-wave-empty:hover { border-color: var(--line-hover); background: var(--accent-softer); }
 .wt-mk-rail { position: relative; height: 24px; margin-bottom: 7px; }
 .wt-mk { position: absolute; bottom: 0; width: 20px; height: 20px; border-radius: 50%;
-  transform: translateX(-50%); background: var(--accent); color: var(--accent-ink);
+  transform: translateX(-50%); background: var(--accent-2); color: var(--accent-2-ink);
   font-family: var(--mono); font-size: 11px; font-weight: 700; display: grid; place-items: center;
   z-index: 4; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
 .wt-mk::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-  width: 1.5px; height: 7px; background: var(--accent-line); }
+  width: 1.5px; height: 7px; background: var(--accent-2-line); }
 .wt-mk.region { border-radius: 5px; transform: none; }
 .wt-mk.region::after { left: 50%; transform: translateX(-50%); }
-.wt-mk.active { box-shadow: 0 0 0 3px var(--accent-soft), 0 2px 8px rgba(0, 0, 0, 0.5); }
+.wt-mk.active { box-shadow: 0 0 0 3px var(--accent-2-soft), 0 2px 8px rgba(0, 0, 0, 0.5); }
 /* Empty placeholder marker that pulses until its comment is saved */
 .wt-mk.draft { pointer-events: none; animation: wt-mk-blink 1.1s ease-in-out infinite; }
 @keyframes wt-mk-blink { 50% { opacity: 0.3; } }
@@ -187,17 +187,17 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-comment { display: flex; gap: 11px; padding: 12px; border: 1px solid var(--line-soft);
   border-radius: var(--r-sm); background: var(--panel-2); cursor: pointer; transition: 0.14s; }
 .wt-comment:not(.active):hover { border-color: var(--line-hover); background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)), var(--panel-2); transform: translateY(-1px); }
-.wt-comment.active { border-color: var(--accent-line); background: var(--accent-soft); }
-.wt-cn { width: 24px; height: 24px; flex: none; border-radius: 50%; background: var(--accent);
-  color: var(--accent-ink); font-family: var(--mono); font-size: 12px; font-weight: 700;
+.wt-comment.active { border-color: var(--accent-2-line); background: var(--accent-2-soft); }
+.wt-cn { width: 24px; height: 24px; flex: none; border-radius: 50%; background: var(--accent-2);
+  color: var(--accent-2-ink); font-family: var(--mono); font-size: 12px; font-weight: 700;
   display: grid; place-items: center; }
 .wt-cn.region { border-radius: 6px; }
 .wt-cbody { flex: 1; min-width: 0; }
 .wt-crow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 /* Timecode pill reads as a faint outline here, no fill competing with the card */
 .wt-crow .wt-pill { background: none; border-color: rgba(255, 255, 255, 0.12); }
-/* Draft point/region tag keeps its accent text and outline, drops the fill */
-.wt-pill.wt-draft-pill { background: none; }
+/* Draft point/region tag is a solid comment chip so its text stays readable */
+.wt-pill.wt-draft-pill { background: var(--accent-2); color: var(--accent-2-ink); border-color: var(--accent-2); }
 .wt-cwho { font-size: 13px; color: var(--ink); font-weight: 600; }
 .wt-cfoot { display: flex; align-items: flex-end; gap: 8px; }
 .wt-ctext { flex: 1; min-width: 0; font-size: 13px; color: var(--ink-dim); line-height: 1.5; }
@@ -211,7 +211,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-vrow { display: flex; align-items: center; gap: 13px; padding: 13px 15px;
   border-radius: var(--r-sm); border: 1px solid var(--line-soft); background: var(--panel-2);
   transition: 0.14s; }
-.wt-vrow.active { background: var(--accent-soft); border-color: var(--accent-line); }
+.wt-vrow.active { background: var(--accent-3-soft); border-color: var(--accent-3-line); }
 .wt-vrow:not(.active):hover { border-color: var(--line-hover); background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)), var(--panel-2); transform: translateY(-1px); }
 /* older rows are one line, fixed height keeps the Diff button from growing them when selected */
 .wt-vrow.compact { height: 40px; padding-top: 0; padding-bottom: 0; }

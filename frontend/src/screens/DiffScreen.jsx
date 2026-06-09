@@ -132,7 +132,7 @@ function DiffLine({ row }) {
 function UnifiedDiff({ fileName, aVer, bVer, rows }) {
   // Count fields that actually differ so the hunk header reflects
   const changed = rows.filter((r) => r.changed).length;
-  const changeLabel = `${changed} ${changed === 1 ? 'change' : 'changes'}`;
+  const changeLabel = `${changed} ${changed === 1 ? 'metadata change' : 'metadata changes'}`;
   return (
     <div className="wt-card" style={{ overflow: 'hidden', fontFamily: 'var(--mono)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--line)', background: 'var(--head)', fontSize: 13 }}>
@@ -140,7 +140,7 @@ function UnifiedDiff({ fileName, aVer, bVer, rows }) {
         <span style={{ color: 'var(--ink)' }}>{fileName}</span>
         <span style={{ color: 'var(--ink-faint)' }}>{aVer} → {bVer}</span>
       </div>
-      <div style={{ padding: '7px 16px', background: 'var(--accent-softer)', color: 'var(--accent)', fontSize: 12.5, borderBottom: '1px solid var(--line-soft)' }}>
+      <div style={{ padding: '7px 16px', background: 'var(--diff-hunk-soft)', color: 'var(--diff-hunk)', fontSize: 12.5, borderBottom: '1px solid var(--line-soft)' }}>
         @@ {changeLabel} @@
       </div>
       {rows.map((r) => (

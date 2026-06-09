@@ -6,23 +6,34 @@
   --panel-3: #23252f;
   --line: #2b2e39;
   --line-soft: #21232b;
-  --line-hover: rgba(255, 255, 255, 0.5); /* white outline on hover, replaces the old purple */
+  --line-hover: rgba(255, 255, 255, 0.5); /* white outline on hover */
 
   --head: #0f1016; /* sunken header surface: app bar + table/diff/modal headers */
-  --rail: #101116; /* side rails: comments rail, version rail */
+  --rail: #101116; /* comments rail, version rail */
 
-  --ink: #f2f2f2;
-  --ink-dim: #d0d2d7;
-  --ink-faint: #9da2b8;
+  --ink: #f6f7f9;
+  --ink-dim: #dee1e7;
+  --ink-faint: #b0b6c9;
 
-  /* UI accent, alpha variants are derived from this base */
-  --accent: #a87bff; /* brand purple for buttons, links, active states */
-  --accent-ink: #14081f; /* readable text on accent fills */
-  /* same color at different opacities (change all together) */
-  --accent-soft: rgba(184, 149, 255, 0.14); /* faint fill behind active or hovered items */
-  --accent-softer: rgba(168, 123, 255, 0.07); /* fainter fill for subtle backgrounds */
-  --accent-line: rgba(168, 123, 255, 0.25); /* accent borders and outlines */
-  --accent-glow: rgba(168, 123, 255, 0.35); /* glow behind focused or active elements */
+  --accent: rgb(135, 156, 201); /* buttons, links, focus, primary actions */
+  --accent-ink: #000000; /* text on fill */
+  --accent-soft: rgba(135, 156, 201, 0.14); /* faint fill behind active or hovered items */
+  --accent-softer: rgba(135, 156, 201, 0.07); /* fainter fill for subtle backgrounds */
+  --accent-line: rgba(135, 156, 201, 0.25); /* blue borders and outlines */
+  --accent-glow: rgba(135, 156, 201, 0.35); /* glow behind focused or active elements */
+
+  --accent-2: rgb(60, 62, 99); /* slate for comment badges and waveform pins */
+  --accent-2-ink: #f6f7f9; /* light text */
+  --accent-2-soft: rgba(60, 62, 99, 0.55);
+  --accent-2-line: rgba(60, 62, 99, 0.9);
+
+  --accent-3: #7e88ea; /* selected version node and active row */
+  --accent-3-soft: rgba(126, 136, 234, 0.14);
+  --accent-3-line: rgba(126, 136, 234, 0.25);
+
+  /* Purple for diff hunk header */
+  --diff-hunk: #a87bff;
+  --diff-hunk-soft: rgba(168, 123, 255, 0.07);
 
   /* note: Waveform.jsx applies color separately since a canvas can't read CSS vars */
 

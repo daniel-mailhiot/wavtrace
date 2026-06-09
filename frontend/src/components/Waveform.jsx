@@ -4,8 +4,8 @@ import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
 import Transport from './Transport';
 import formatTime from '../utils/formatTime';
 
-// Canvas can't read CSS vars, so region fill is a color mirroring --accent-soft
-const REGION_FILL = 'rgba(168, 123, 255, 0.14)';
+// Canvas can't read CSS vars
+const REGION_FILL = 'rgba(61, 62, 81, 0.3)';
 
 // Owns wavesurfer instance and renders its own transport
 // Passes state up through callbacks so the screen can control playback, version switching and the comment composerr
@@ -33,7 +33,7 @@ export default function Waveform({
     height: 180,
     waveColor: '#565a67',
     progressColor: '#f2f2f2e5',
-    cursorColor: '#a87bff',
+    cursorColor: '#879cc9',
     barWidth: 2.5,
     barGap: 2,
     barRadius: 1.5,
