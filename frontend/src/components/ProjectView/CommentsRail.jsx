@@ -78,7 +78,7 @@ function AddComment({ hasVersion, draft, text, duration, onText, onSubmit }) {
               ? isRegion
                 ? `Add feedback on ${detail}…`
                 : `Add feedback @ ${detail}…`
-              : 'Click or drag the waveform to comment…'
+              : 'Click or drag on waveform to comment…'
           }
         />
       </div>

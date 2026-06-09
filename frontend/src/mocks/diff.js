@@ -20,18 +20,12 @@ const METRICS = [
   {
     k: 'Loudness', unit: 'LUFS',
     value: (v) => v.loudness.toFixed(1),
-    delta: (a, b) => {
-      const d = round1(b.loudness - a.loudness);
-      return { text: `${signed(d)} · ${d >= 0 ? 'louder' : 'quieter'}`, tone: 'accent' };
-    },
+    delta: (a, b) => ({ text: `${signed(round1(b.loudness - a.loudness))} LUFS`, tone: 'accent' }),
   },
   {
     k: 'Duration', unit: '',
     value: (v) => formatTime(v.duration),
-    delta: (a, b) => {
-      const d = b.duration - a.duration;
-      return { text: `${signed(d)}s · ${d >= 0 ? 'longer' : 'shorter'}`, tone: 'dim' };
-    },
+    delta: (a, b) => ({ text: `${signed(b.duration - a.duration)}s`, tone: 'dim' }),
   },
   {
     k: 'True peak', unit: 'dB',
@@ -45,10 +39,7 @@ const METRICS = [
   {
     k: 'LRA', unit: 'LU',
     value: (v) => v.lra.toFixed(1),
-    delta: (a, b) => {
-      const d = round1(b.lra - a.lra);
-      return { text: `${signed(d)} · ${d <= 0 ? 'tighter' : 'wider'}`, tone: 'dim' };
-    },
+    delta: (a, b) => ({ text: `${signed(round1(b.lra - a.lra))} LU`, tone: 'dim' }),
   },
   {
     k: 'Clipping', unit: '',
