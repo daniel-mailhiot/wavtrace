@@ -26,8 +26,8 @@ function DiffButton({ onDiff, compact }) {
       size="sm"
       variant="primary"
       style={{
-        background: 'rgba(168, 123, 255, 0.8)',
-        borderColor: 'rgba(168, 123, 255, 0.8)',
+        background: 'rgba(108, 151, 230, 0.8)',
+        borderColor: 'rgba(108, 151, 230, 0.8)',
         ...(compact ? { height: 28, padding: '0 10px', fontSize: 11.5 } : {}),
       }}
       onClick={(e) => { e.stopPropagation(); onDiff(); }}
@@ -96,7 +96,7 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
   const [dotTop, setDotTop] = useState(0);
   const [glide, setGlide] = useState(false);
 
-  // Move the purple node onto the selected row and fall back to the group node when that row is collapsed
+  // Move the accent node onto the selected row and fall back to the group node when that row is collapsed
   useLayoutEffect(() => {
     const spine = spineRef.current;
     const target = rowRefs.current[selected] || summaryRef.current;
