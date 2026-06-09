@@ -57,7 +57,7 @@ function ReadyMetrics({ version }) {
             <div className="faint mono" style={{ fontSize: 10.5, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{h.k}</div>
             {h.chip ? (
               <div style={{ marginTop: 8 }}>
-                <Pill tone={hero.clipping ? 'bad' : 'ok'}>{hero.clipping ? 'clipping' : 'no clipping detected'}</Pill>
+                <Pill tone={hero.clipping ? 'bad' : 'ok'}>{hero.clipping ? 'clipping' : 'no clipping'}</Pill>
               </div>
             ) : (
               <div className="mono" style={{ fontSize: 24, marginTop: 6, color: h.tone === 'ok' ? 'var(--ok)' : 'var(--ink)', display: 'flex', alignItems: 'baseline', gap: 5 }}>

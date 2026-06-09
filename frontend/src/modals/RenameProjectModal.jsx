@@ -38,7 +38,7 @@ export default function RenameProjectModal({ project, onClose, onRenamed }) {
             className="mono"
             style={{ fontSize: 12.5, color: 'var(--ink-dim)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
           >
-            {name || '(updates as typed)'}
+            {name || ' '}
           </span>
         </div>
 

@@ -77,13 +77,22 @@ function CompareCard({ aVer, bVer, rows }) {
             {r.k}
           </div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 15, display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ color: r.flagA ? 'var(--bad)' : 'var(--ink-dim)' }}>{r.aVal}</span>
-            <span style={{ color: 'var(--ink-faint)', fontSize: 12 }}>→</span>
-            <span style={{ color: r.changed ? TONE_COLOR[r.tone] : 'var(--ink)' }}>{r.bVal}</span>
+            {/*One number when no change */}
+            {r.changed ? (
+              <>
+                <span style={{ color: r.flagA ? 'var(--bad)' : 'var(--ink-dim)' }}>{r.aVal}</span>
+                <span style={{ color: 'var(--ink-faint)', fontSize: 12 }}>→</span>
+                <span style={{ color: TONE_COLOR[r.tone] }}>{r.bVal}</span>
+              </>
+            ) : (
+              <span style={{ color: 'var(--ink)' }}>{r.bVal}</span>
+            )}
             {r.unit && <small style={{ fontSize: 11, color: 'var(--ink-faint)' }}>{r.unit}</small>}
           </div>
-          {r.changed && r.delta && (
+          {r.changed ? (
             <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-dim)', marginTop: 3 }}>{r.delta}</div>
+          ) : (
+            <div className="mono" style={{ fontSize: 11.5, color: 'var(--ink-faint)', marginTop: 3 }}>no change</div>
           )}
         </div>
       ))}
@@ -121,6 +130,9 @@ function DiffLine({ row }) {
 }
 
 function UnifiedDiff({ fileName, aVer, bVer, rows }) {
+  // Count fields that actually differ so the hunk header reflects
+  const changed = rows.filter((r) => r.changed).length;
+  const changeLabel = `${changed} ${changed === 1 ? 'change' : 'changes'}`;
   return (
     <div className="wt-card" style={{ overflow: 'hidden', fontFamily: 'var(--mono)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--line)', background: 'var(--head)', fontSize: 13 }}>
@@ -129,7 +141,7 @@ function UnifiedDiff({ fileName, aVer, bVer, rows }) {
         <span style={{ color: 'var(--ink-faint)' }}>{aVer} → {bVer}</span>
       </div>
       <div style={{ padding: '7px 16px', background: 'var(--accent-softer)', color: 'var(--accent)', fontSize: 12.5, borderBottom: '1px solid var(--line-soft)' }}>
-        @@ file metadata @@
+        @@ {changeLabel} @@
       </div>
       {rows.map((r) => (
         <Fragment key={r.k}>

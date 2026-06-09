@@ -38,8 +38,9 @@ export default function Select({ value, options, onChange, accent = false, width
 
   const current = options.find((o) => o.id === value);
 
+  // Accent keeps its purple box but leaves text/caret the default dim white
   const accentStyle = accent
-    ? { color: 'var(--accent)', borderColor: 'var(--accent-line)', background: 'var(--accent-soft)' }
+    ? { borderColor: 'var(--accent-line)', background: 'var(--accent-soft)' }
     : null;
 
   function pick(id) {

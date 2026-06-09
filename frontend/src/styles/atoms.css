@@ -195,12 +195,12 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-cbody { flex: 1; min-width: 0; }
 .wt-crow { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .wt-cwho { font-size: 13px; color: var(--ink); font-weight: 600; }
-.wt-ctext { font-size: 13px; color: var(--ink-dim); line-height: 1.5; }
-/* Delete shows on card hover (or keyboard focus) */
+.wt-cfoot { display: flex; align-items: flex-end; gap: 8px; }
+.wt-ctext { flex: 1; min-width: 0; font-size: 13px; color: var(--ink-dim); line-height: 1.5; }
+/* Always shown, only renders on the author's own comments */
 .wt-cdel { flex: none; width: 24px; height: 24px; display: grid; place-items: center;
   border: none; background: none; color: var(--ink-faint); cursor: pointer; border-radius: 6px;
-  opacity: 0; transition: 0.14s; }
-.wt-comment:hover .wt-cdel, .wt-cdel:focus-visible { opacity: 1; }
+  transition: 0.14s; }
 .wt-cdel:hover { color: var(--bad); }
 
 /* Version row */
