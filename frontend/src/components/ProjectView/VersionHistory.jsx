@@ -18,12 +18,30 @@ function PlayPill({ playing, onTogglePlay }) {
   );
 }
 
+// Stays on whichever version row is selected
+function DiffButton({ onDiff, compact }) {
+  return (
+    <Button
+      size="sm"
+      variant="primary"
+      style={{
+        background: 'rgba(168, 123, 255, 0.8)',
+        borderColor: 'rgba(168, 123, 255, 0.8)',
+        ...(compact ? { height: 28, padding: '0 10px', fontSize: 11.5 } : {}),
+      }}
+      onClick={(e) => { e.stopPropagation(); onDiff(); }}
+    >
+      <CompareIcon /> Diff view
+    </Button>
+  );
+}
+
 function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff, onNewVersion }) {
   const isSelected = selected === version._id;
   return (
     <div
       className={'wt-vrow' + (isSelected ? ' active' : '')}
-      style={isSelected ? undefined : { border: '1px solid var(--line-soft)', background: 'var(--panel-2)', cursor: 'pointer' }}
+      style={isSelected ? undefined : { cursor: 'pointer' }}
       onClick={isSelected ? undefined : onSelect}
     >
       <span className="wt-vbadge">{version.v}</span>
@@ -37,14 +55,7 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
           {version.who} {version.when} · {version.meta}
         </div>
       </div>
-      <Button
-        size="sm"
-        variant="primary"
-        style={{ background: 'rgba(168, 123, 255, 0.8)', borderColor: 'rgba(168, 123, 255, 0.8)' }}
-        onClick={(e) => { e.stopPropagation(); onDiff(); }}
-      >
-        <CompareIcon /> Diff view
-      </Button>
+      {isSelected && <DiffButton onDiff={onDiff} />}
       <Button size="sm" onClick={(e) => { e.stopPropagation(); onNewVersion?.(); }}>
         <UploadIcon /> New version
       </Button>
@@ -52,12 +63,12 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
   );
 }
 
-function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
+function OlderRow({ version, selected, playing, onTogglePlay, onSelect, onDiff }) {
   const isSelected = selected === version._id;
   return (
     <div
-      className={'wt-vrow' + (isSelected ? ' active' : '')}
-      style={isSelected ? { cursor: 'pointer' } : { border: '1px solid var(--line-soft)', background: 'var(--panel-2)', cursor: 'pointer' }}
+      className={'wt-vrow compact' + (isSelected ? ' active' : '')}
+      style={{ cursor: 'pointer' }}
       onClick={onSelect}
     >
       <span className="wt-vbadge">{version.v}</span>
@@ -66,6 +77,7 @@ function OlderRow({ version, selected, playing, onTogglePlay, onSelect }) {
         <span style={{ fontSize: 11.5 }}> · {version.who} {version.when}</span>
       </div>
       {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */} {/* (disabled) */}
+      {isSelected && <DiffButton onDiff={onDiff} compact />}
       <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>{version.meta}</span>
     </div>
   );
@@ -114,6 +126,7 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
                 playing={playing}
                 onTogglePlay={onTogglePlay}
                 onSelect={() => onSelectVersion(v._id)}
+                onDiff={onDiff}
               />
             ))}
           </div>

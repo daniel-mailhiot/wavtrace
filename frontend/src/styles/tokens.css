@@ -6,6 +6,7 @@
   --panel-3: #23252f;
   --line: #2b2e39;
   --line-soft: #21232b;
+  --line-hover: rgba(255, 255, 255, 0.5); /* white outline on hover, replaces the old purple */
 
   --head: #0f1016; /* sunken header surface: app bar + table/diff/modal headers */
   --rail: #101116; /* side rails: comments rail, version rail */

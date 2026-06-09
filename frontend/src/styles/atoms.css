@@ -55,7 +55,7 @@ Atom classes (all screens reuse)
   padding: 0 15px; height: 38px; border-radius: var(--r-sm);
   border: 1px solid var(--line); color: var(--ink-dim); background: var(--panel-2);
   cursor: pointer; white-space: nowrap; transition: 0.14s ease; }
-.wt-btn:hover { border-color: var(--accent-line); color: var(--ink); }
+.wt-btn:hover { border-color: var(--line-hover); color: var(--ink); }
 .wt-btn.p { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .wt-btn.p:hover { filter: brightness(1.08); color: var(--accent-ink); }
 .wt-btn.ghost { background: transparent; }
@@ -93,7 +93,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-select { font-family: var(--mono); font-size: 13px; color: var(--ink-dim);
   border: 1px solid var(--line); background: var(--panel-2); border-radius: var(--r-sm);
   padding: 0 12px; height: 38px; cursor: pointer; transition: 0.14s ease; }
-.wt-select:hover { border-color: var(--accent-line); color: var(--ink); }
+.wt-select:hover { border-color: var(--line-hover); color: var(--ink); }
 .wt-select:focus-visible { outline: none; border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-softer); }
 
 /* Dropdown menu */
@@ -152,7 +152,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
   align-items: center; justify-content: center; gap: 13px; text-align: center;
   background: var(--panel-2); border: 1.5px dashed var(--line); border-radius: var(--r-md);
   cursor: pointer; transition: 0.14s; }
-.wt-wave-empty:hover { border-color: var(--accent-line); background: var(--accent-softer); }
+.wt-wave-empty:hover { border-color: var(--line-hover); background: var(--accent-softer); }
 .wt-mk-rail { position: relative; height: 24px; margin-bottom: 7px; }
 .wt-mk { position: absolute; bottom: 0; width: 20px; height: 20px; border-radius: 50%;
   transform: translateX(-50%); background: var(--accent); color: var(--accent-ink);
@@ -172,7 +172,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-tbtn { width: 38px; height: 38px; display: grid; place-items: center; border-radius: var(--r-sm);
   border: 1px solid var(--line); background: var(--panel-2); color: var(--ink-dim);
   cursor: pointer; transition: 0.14s; }
-.wt-tbtn:hover { color: var(--ink); border-color: var(--accent-line); }
+.wt-tbtn:hover { color: var(--ink); border-color: var(--line-hover); }
 .wt-tbtn.play { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); width: 44px; height: 44px; }
 .wt-tbtn.play:hover { color: var(--accent-ink); filter: brightness(1.08); }
 .wt-tbtn svg { width: 15px; height: 15px; }
@@ -185,7 +185,7 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 /* Comment card */
 .wt-comment { display: flex; gap: 11px; padding: 12px; border: 1px solid var(--line-soft);
   border-radius: var(--r-sm); background: var(--panel-2); cursor: pointer; transition: 0.14s; }
-.wt-comment:hover { border-color: var(--line); }
+.wt-comment:not(.active):hover { border-color: var(--line-hover); background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)), var(--panel-2); transform: translateY(-1px); }
 .wt-comment.active { border-color: var(--accent-line); background: var(--accent-soft); }
 .wt-cn { width: 24px; height: 24px; flex: none; border-radius: 50%; background: var(--accent);
   color: var(--accent-ink); font-family: var(--mono); font-size: 12px; font-weight: 700;
@@ -204,8 +204,12 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 
 /* Version row */
 .wt-vrow { display: flex; align-items: center; gap: 13px; padding: 13px 15px;
-  border-radius: var(--r-sm); border: 1px solid transparent; }
+  border-radius: var(--r-sm); border: 1px solid var(--line-soft); background: var(--panel-2);
+  transition: 0.14s; }
 .wt-vrow.active { background: var(--accent-soft); border-color: var(--accent-line); }
+.wt-vrow:not(.active):hover { border-color: var(--line-hover); background: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)), var(--panel-2); transform: translateY(-1px); }
+/* older rows are one line, fixed height keeps the Diff button from growing them when selected */
+.wt-vrow.compact { height: 40px; padding-top: 0; padding-bottom: 0; }
 .wt-vbadge { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--ink);
   min-width: 30px; }
 

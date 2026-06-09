@@ -31,7 +31,8 @@ export default function EmptyProject({ onUpload }) {
       <Eyebrow style={{ marginBottom: 10 }}>Versions</Eyebrow>
       <div style={{ position: 'relative', paddingLeft: 24 }}>
         <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, borderRadius: '50%', border: '2px dashed var(--line)', background: 'var(--board)' }} />
-        <div className="wt-vrow" style={{ border: '1px dashed var(--line)', background: 'var(--panel-2)' }}>
+        {/* not clickable so skip the row hover lift */}
+        <div className="wt-vrow" style={{ border: '1px dashed var(--line)', background: 'var(--panel-2)', pointerEvents: 'none' }}>
           <span className="wt-vbadge" style={{ color: 'var(--ink-faint)' }}>v1</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13.5, color: 'var(--ink-dim)' }}>No versions yet</div>
