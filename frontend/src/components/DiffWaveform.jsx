@@ -15,10 +15,9 @@ export default function DiffWaveform({ baselineUrl, compareUrl, height = 160 }) 
   const canvasRef = useRef(null);
   const [peaks, setPeaks] = useState(null);
 
-  // Decode both clips whenever the picked versions change
+  // Runs once per mount because DiffScreen keys this by version pair
   useEffect(() => {
     let alive = true;
-    setPeaks(null);
     Promise.all([getPeaks(baselineUrl), getPeaks(compareUrl)])
       .then(([base, cmp]) => alive && setPeaks({ base, cmp }))
       .catch(() => {});

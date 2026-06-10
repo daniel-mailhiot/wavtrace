@@ -237,7 +237,8 @@ export default function DiffScreen() {
                   {missingAudio.length === 0 && <Legend aVer={vlabel(aVersion)} />}
                 </div>
                 {missingAudio.length === 0 ? (
-                  <DiffWaveform baselineUrl={aVersion.url} compareUrl={bVersion.url} />
+                  // Key remounts the waveform to keep stale bars from showing while a new pair decodes
+                  <DiffWaveform key={aId + bId} baselineUrl={aVersion.url} compareUrl={bVersion.url} />
                 ) : (
                   <MissingAudioNotice labels={missingAudio.map(vlabel)} />
                 )}
