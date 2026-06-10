@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
@@ -12,25 +13,25 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const audioDir = path.join(__dirname, 'demo-audio');
 
 const DEMO_USERS = [
-  { name: 'Kai', email: 'kai@wavtrace.demo' },
-  { name: 'Ana', email: 'ana@wavtrace.demo' },
+  { name: 'Amy E', email: 'amy@wavtrace.com' },
+  { name: 'Flinns K', email: 'flinns@wavtrace.com' },
 ];
 
 const DEMO_FILES = ['audio-demo-V1.wav', 'audio-demo-V2.wav', 'audio-demo-V3.wav'];
 
 const DEMO_COMMENTS = [
   [
-    { by: 'kai', t: 0.5, text: 'Solid first pass. Melody is catchy, the mix just needs some polish.' },
+    { by: 'amy', t: 0.5, text: 'Solid first pass. Melody is catchy, the mix just needs some polish.' },
   ],
   [
-    { by: 'ana', t: 0.31, text: 'The intro swell builds nicely now, much better pacing.' },
-    { by: 'kai', region: [0.6, 0.7], text: 'Drums get a bit buried through this stretch. Bring them up?' },
+    { by: 'flinns', t: 0.31, text: 'The intro swell builds nicely now, much better pacing.' },
+    { by: 'amy', region: [0.6, 0.7], text: 'Drums get a bit buried through this stretch. Bring them up?' },
   ],
   [
-    { by: 'kai', t: 0.18, text: 'Low end is muddy here. Try a high-pass on the pad?' },
-    { by: 'ana', region: [0.42, 0.5], text: 'This part repeats a little too long. Trimming a few bars could keep momentum.' },
-    { by: 'kai', t: 0.72, text: 'Vocal sits a touch too far back in the mix now.' },
-    { by: 'kai', t: 0.93, text: "Everything else sounds great! I'll lock final version after changes." },
+    { by: 'amy', t: 0.18, text: 'Low end is muddy here. Try a high-pass on the pad?' },
+    { by: 'flinns', region: [0.42, 0.5], text: 'This part repeats a little too long. Trimming a few bars could keep momentum.' },
+    { by: 'amy', t: 0.72, text: 'Vocal sits a touch too far back in the mix now.' },
+    { by: 'amy', t: 0.93, text: "Everything else sounds great! I'll lock final version after changes." },
   ],
 ];
 
@@ -40,7 +41,10 @@ export async function ensureDemoUsers() {
   for (const u of DEMO_USERS) {
     let user = await User.findOne({ email: u.email });
     if (!user) {
-      const passwordHash = await bcrypt.hash('demo-reviewer', 10);
+      // Password from env lets me log in as a reviewer on the deployed app
+      // Uses random throwaway password when cloning the repo instead of hardcoding the password
+      const password = process.env.DEMO_REVIEWER_PASSWORD || crypto.randomBytes(32).toString('hex');
+      const passwordHash = await bcrypt.hash(password, 10);
       user = await User.create({ ...u, passwordHash });
     }
     users.push(user);
@@ -50,14 +54,14 @@ export async function ensureDemoUsers() {
 
 // Give a new signup a populated project so they can see the app without uploading anythin
 export async function seedDemoProject(ownerUserId) {
-  const [kai, ana] = await ensureDemoUsers();
+  const [amy, flinns] = await ensureDemoUsers();
 
   const project = await Project.create({
     name: 'Demo Project',
     members: [
       { userId: ownerUserId, role: 'owner' },
-      { userId: kai._id, role: 'reviewer' },
-      { userId: ana._id, role: 'reviewer' },
+      { userId: amy._id, role: 'reviewer' },
+      { userId: flinns._id, role: 'reviewer' },
     ],
   });
 
@@ -77,7 +81,7 @@ export async function seedDemoProject(ownerUserId) {
   const created = await Version.insertMany(versions);
 
   // Convert each comment's fractions to seconds using its version's duration
-  const authors = { kai, ana };
+  const authors = { amy, flinns };
   const comments = [];
   created.forEach((version, i) => {
     const dur = version.analysis.durationSec;
