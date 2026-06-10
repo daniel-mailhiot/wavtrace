@@ -9,11 +9,12 @@ import MongoStore from 'connect-mongo';
 import passport from './config/passport.js';
 import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
+import Version from './models/Version.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-// Use test DB during API tests, otherwise use real one
+// Use test DB during API tests otherwise use real one
 const mongoUri =
   process.env.NODE_ENV === 'test'
     ? process.env.MONGO_URI_TEST
@@ -22,7 +23,7 @@ const mongoUri =
 app.use(cors());
 app.use(express.json());
 
-// Session cookie, stored in Mongo so logins survive restarts
+// Session cookie stored in Mongo so logins survive restarts
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -33,7 +34,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Shared demo audio, served statically so seeded projects never touch R2
+// Shared demo audio served statically so seeded projects aren't stored in R2
 app.use('/demo-audio', express.static(path.join(__dirname, 'seed/demo-audio')));
 
 // Routes
@@ -48,9 +49,11 @@ app.get('/', (req, res) => {
 // Database connection
 mongoose
   .connect(mongoUri)
-  .then(() =>
-    console.log(`MongoDB connected (${process.env.NODE_ENV === 'test' ? 'test' : 'dev'})`)
-  )
+  .then(async () => {
+    console.log(`MongoDB connected (${process.env.NODE_ENV === 'test' ? 'test' : 'dev'})`);
+    // A restart mid-analysis leaves versions stuck on processing, mark them failed so the frontend stops checking
+    await Version.updateMany({ analysisStatus: 'processing' }, { analysisStatus: 'failed' });
+  })
   .catch((err) => console.error('MongoDB connection error:', err));
 
 const PORT = process.env.PORT || 5000;

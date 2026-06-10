@@ -3,6 +3,7 @@ import requireAuth from '../middleware/auth.js';
 import requireProjectRole from '../middleware/projectRole.js';
 import loadVersion from '../middleware/loadVersion.js';
 import loadComment from '../middleware/loadComment.js';
+import handleUpload from '../middleware/upload.js';
 import {
   createProject,
   listProjects,
@@ -13,7 +14,7 @@ import {
   updateMember,
   removeMember
 } from '../controllers/projectController.js';
-import { listVersions } from '../controllers/versionController.js';
+import { listVersions, uploadVersion } from '../controllers/versionController.js';
 import { listComments, createComment, deleteComment } from '../controllers/commentController.js';
 
 const router = express.Router();
@@ -31,6 +32,8 @@ router.patch('/:id/members/:userId', requireProjectRole('owner'), updateMember);
 router.delete('/:id/members/:userId', requireProjectRole('owner'), removeMember);
 
 router.get('/:id/versions', requireProjectRole(), listVersions);
+// Role check runs before multer so non-owners are rejected before any files save
+router.post('/:id/versions', requireProjectRole('owner'), handleUpload, uploadVersion);
 
 router.get('/:id/versions/:versionId/comments', requireProjectRole(), loadVersion, listComments);
 router.post('/:id/versions/:versionId/comments', requireProjectRole('owner', 'reviewer'), loadVersion, createComment);
