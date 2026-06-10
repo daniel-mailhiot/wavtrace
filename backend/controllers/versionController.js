@@ -1,11 +1,14 @@
 import Version from '../models/Version.js';
+import { r2Configured, getDownloadUrl } from '../lib/r2.js';
 
-//Static path for demo audio with signed R2 urls once real uploads work
-function urlFor(fileKey) {
+// Demo files come from the static folder (idea was so register doesn't fill R2 storage - might revisit later)
+// Real uploads get a signed R2 url and a null fileKey means the file was analyzed but never stored
+async function urlFor(fileKey) {
+  if (!fileKey) return null;
   if (fileKey.startsWith('demo/')) {
     return `/demo-audio/${fileKey.slice('demo/'.length)}`;
   }
-  return null;
+  return r2Configured ? getDownloadUrl(fileKey) : null;
 }
 
 // GET /api/projects/:id/versions
@@ -16,7 +19,10 @@ export const listVersions = async (req, res) => {
       .populate('uploaderId', 'name')
       .sort({ versionNumber: -1 });
 
-    const withUrls = versions.map((v) => ({ ...v.toObject(), url: urlFor(v.fileKey) }));
+    // urlFor is async since signing R2 urls returns a promise
+    const withUrls = await Promise.all(
+      versions.map(async (v) => ({ ...v.toObject(), url: await urlFor(v.fileKey) }))
+    );
     res.json(withUrls);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
