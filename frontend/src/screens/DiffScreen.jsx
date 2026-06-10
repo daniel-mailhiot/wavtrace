@@ -10,7 +10,7 @@ import { CompareIcon } from '../components/icons';
 import { getProject, getCachedProject } from '../api/projects';
 import { listVersions } from '../api/versions';
 import { diffMetadata } from '../utils/formatMetadata';
-import { computeDiff } from '../mocks/diff';
+import { computeDiff } from '../utils/computeDiff';
 
 const TONE_COLOR = {
   accent: 'var(--accent)',
