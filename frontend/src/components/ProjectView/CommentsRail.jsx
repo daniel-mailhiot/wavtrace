@@ -89,7 +89,7 @@ function AddComment({ hasVersion, draft, text, duration, onText, onSubmit }) {
   );
 }
 
-export default function CommentsRail({ comments, hasVersion, activeId, duration, draft, text, currentUserId, onSelect, onText, onSubmit, onDelete }) {
+export default function CommentsRail({ comments, hasVersion, activeId, duration, draft, text, canComment, currentUserId, onSelect, onText, onSubmit, onDelete }) {
   return (
     <div className="wt-pv-rail">
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
@@ -117,9 +117,12 @@ export default function CommentsRail({ comments, hasVersion, activeId, duration,
         )}
       </div>
 
-      <div style={{ padding: 16, borderTop: '1px solid var(--line)' }}>
-        <AddComment hasVersion={hasVersion} draft={draft} text={text} duration={duration} onText={onText} onSubmit={onSubmit} />
-      </div>
+      {/* Viewers can read but commenting is owner/reviewer only */}
+      {canComment && (
+        <div style={{ padding: 16, borderTop: '1px solid var(--line)' }}>
+          <AddComment hasVersion={hasVersion} draft={draft} text={text} duration={duration} onText={onText} onSubmit={onSubmit} />
+        </div>
+      )}
     </div>
   );
 }

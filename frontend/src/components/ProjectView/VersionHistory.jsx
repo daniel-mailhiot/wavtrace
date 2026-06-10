@@ -4,21 +4,6 @@ import Pill from '../Pill';
 import Button from '../Button';
 import { CompareIcon, UploadIcon } from '../icons';
 
-function PlayPill({ playing, onTogglePlay }) {
-  return (
-    <Pill
-      tone="accent"
-      style={{ cursor: 'pointer' }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onTogglePlay();
-      }}
-    >
-      {playing ? 'pause' : 'play'}
-    </Pill>
-  );
-}
-
 // Stays on whichever version row is selected
 function DiffButton({ onDiff, compact }) {
   return (
@@ -37,7 +22,7 @@ function DiffButton({ onDiff, compact }) {
   );
 }
 
-function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff, onNewVersion }) {
+function LatestRow({ version, selected, isOwner, onSelect, onDiff, onNewVersion }) {
   const isSelected = selected === version._id;
   return (
     <div
@@ -50,21 +35,23 @@ function LatestRow({ version, selected, playing, onTogglePlay, onSelect, onDiff,
         <div style={{ fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
           <span className="mono">{version.file}</span>
           <Pill tone="plain" style={{ fontSize: 10 }}>latest</Pill>
-          {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */} {/* (disabled) */}
         </div>
         <div className="mono faint" style={{ fontSize: 11.5, marginTop: 2 }}>
           {version.who} {version.when}
         </div>
       </div>
       {isSelected && <DiffButton onDiff={onDiff} />}
-      <Button size="sm" onClick={(e) => { e.stopPropagation(); onNewVersion?.(); }}>
-        <UploadIcon /> New version
-      </Button>
+      {/* Only owners can upload */}
+      {isOwner && (
+        <Button size="sm" onClick={(e) => { e.stopPropagation(); onNewVersion?.(); }}>
+          <UploadIcon /> New version
+        </Button>
+      )}
     </div>
   );
 }
 
-function OlderRow({ version, selected, playing, onTogglePlay, onSelect, onDiff }) {
+function OlderRow({ version, selected, onSelect, onDiff }) {
   const isSelected = selected === version._id;
   return (
     <div
@@ -77,15 +64,14 @@ function OlderRow({ version, selected, playing, onTogglePlay, onSelect, onDiff }
         <span style={{ fontSize: 12.5, color: 'var(--ink-dim)' }}>{version.file}</span>
         <span style={{ fontSize: 11.5 }}> · {version.who} {version.when}</span>
       </div>
-      {/* {isSelected && <PlayPill playing={playing} onTogglePlay={onTogglePlay} />} */} {/* (disabled) */}
       {isSelected && <DiffButton onDiff={onDiff} compact />}
       <span style={{ fontSize: 11.5, color: 'var(--ink-faint)' }}>{version.meta}</span>
     </div>
   );
 }
 
-// Git-ish spine
-export default function VersionHistory({ versions, selected, expanded, onToggleExpand, playing, onTogglePlay, onSelectVersion, onDiff, onNewVersion }) {
+// Git style spine
+export default function VersionHistory({ versions, selected, expanded, isOwner, onToggleExpand, onSelectVersion, onDiff, onNewVersion }) {
   const latest = versions[0];
   const older = versions.slice(1).reverse();
 
@@ -143,8 +129,6 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
                 <OlderRow
                   version={v}
                   selected={selected}
-                  playing={playing}
-                  onTogglePlay={onTogglePlay}
                   onSelect={() => onSelectVersion(v._id)}
                   onDiff={onDiff}
                 />
@@ -161,8 +145,7 @@ export default function VersionHistory({ versions, selected, expanded, onToggleE
           <LatestRow
             version={latest}
             selected={selected}
-            playing={playing}
-            onTogglePlay={onTogglePlay}
+            isOwner={isOwner}
             onSelect={() => onSelectVersion(latest._id)}
             onDiff={onDiff}
             onNewVersion={onNewVersion}

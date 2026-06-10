@@ -1,6 +1,8 @@
 import Project from '../models/Project.js';
 import User from '../models/User.js';
 import Version from '../models/Version.js';
+import Comment from '../models/Comment.js';
+import { deleteObject } from '../lib/r2.js';
 
 // POST /api/projects
 export const createProject = async (req, res) => {
@@ -72,6 +74,23 @@ export const updateProject = async (req, res) => {
 // DELETE /api/projects/:id
 export const deleteProject = async (req, res) => {
   try {
+    // Delete everything under the project so nothing is left by itself
+    const versions = await Version.find({ projectId: req.project._id });
+    await Comment.deleteMany({ versionId: { $in: versions.map((v) => v._id) } });
+
+    // Stored files go too, demo keys are shared static files so skip those
+    for (const v of versions) {
+      if (v.fileKey && v.fileKey.startsWith('projects/')) {
+        try {
+          await deleteObject(v.fileKey);
+        } catch (err) {
+          // Log and move on so a leftover object doesn't block the delete
+          console.error('R2 delete failed:', v.fileKey, err.message);
+        }
+      }
+    }
+
+    await Version.deleteMany({ projectId: req.project._id });
     await req.project.deleteOne();
     res.json({ message: 'Project deleted' });
   } catch (err) {

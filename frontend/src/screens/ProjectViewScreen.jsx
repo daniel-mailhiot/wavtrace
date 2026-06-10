@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import AppBar from '../components/AppBar';
+import ErrorCard from '../components/ErrorCard';
 import Waveform from '../components/Waveform';
 import ProjectHeader from '../components/ProjectView/ProjectHeader';
 import VersionHistory from '../components/ProjectView/VersionHistory';
@@ -12,7 +13,7 @@ import initials from '../utils/initials';
 import relativeTime from '../utils/relativeTime';
 import formatTime from '../utils/formatTime';
 import { getProject, deleteProject, getCachedProject } from '../api/projects';
-import { listVersions } from '../api/versions';
+import { listVersions, uploadVersion } from '../api/versions';
 import { listComments, createComment, deleteComment } from '../api/comments';
 import RenameProjectModal from '../modals/RenameProjectModal';
 import CollaboratorsModal from '../modals/CollaboratorsModal';
@@ -52,11 +53,22 @@ function adaptComment(c, dur) {
   return { ...base, region: [c.startTime / dur, c.endTime / dur] };
 }
 
-// Number comments by time so pins and cards stay in sync top to bottom
+// Number comments by time so pins and cards stay ordered
 function numberComments(comments) {
   return [...comments]
     .sort((a, b) => fractionOf(a) - fractionOf(b))
     .map((c, i) => ({ ...c, n: i + 1 }));
+}
+
+function AudioUnavailable() {
+  return (
+    <div className="wt-card-2" style={{ padding: '34px 18px', textAlign: 'center' }}>
+      <div style={{ fontSize: 14, fontWeight: 600 }}>Audio unavailable</div>
+      <div className="mono faint" style={{ fontSize: 12, marginTop: 7 }}>
+        This file wasn't kept in storage. To enable upload storage for this account, please email me at daniel.mailhiot.dev@gmail.com
+      </div>
+    </div>
+  );
 }
 
 export default function ProjectViewScreen() {
@@ -66,7 +78,7 @@ export default function ProjectViewScreen() {
 
   const [project, setProject] = useState(() => getCachedProject(id));
   const [loading, setLoading] = useState(!project);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   const [modal, setModal] = useState(null); // 'rename' | 'collab' | 'delete'
   const [deleting, setDeleting] = useState(false);
 
@@ -78,10 +90,13 @@ export default function ProjectViewScreen() {
   const [activeId, setActiveId] = useState(null);
   const [draft, setDraft] = useState(null); // pending { t } or { region } from a wave click/drag
   const [text, setText] = useState('');
-  const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const wsRef = useRef(null);
+  // First-seen playback url per version id
+  // Presigned urls come different on every fetch and a changed url makes the waveform rebuild mid-play,
+  // poll reuses the cached one instead
+  const audioUrlRef = useRef(new Map());
 
   const currentVersion = versions.find((v) => v._id === currentId) ?? null;
   // Prefer the analyzed duration but fall back to the decoded one before analysis is done
@@ -95,21 +110,39 @@ export default function ProjectViewScreen() {
   useEffect(() => {
     getProject(id)
       .then(setProject)
-      .catch((err) => setError(err.message))
+      .catch(setError)
       .finally(() => setLoading(false));
   }, [id]);
 
-  // Load the project's versions and select the latest one
-  useEffect(() => {
-    listVersions(id)
-      .then((data) => {
-        const adapted = data.map((v) => adaptVersion(v, user?.id));
-        setVersions(adapted);
-        setCurrentId(adapted[0]?._id ?? null);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setVersionsLoaded(true));
+  // Fetch and adapt versions without touching the selection (poll reuses this)
+  const refreshVersions = useCallback(async () => {
+    const data = await listVersions(id);
+    const urls = audioUrlRef.current;
+    const adapted = data.map((v) => {
+      const out = adaptVersion(v, user?.id);
+      if (urls.has(out._id)) out.url = urls.get(out._id);
+      else if (out.url) urls.set(out._id, out.url);
+      return out;
+    });
+    setVersions(adapted);
+    return adapted;
   }, [id, user?.id]);
+
+  // Initial load also selects the latest version
+  useEffect(() => {
+    refreshVersions()
+      .then((adapted) => setCurrentId(adapted[0]?._id ?? null))
+      .catch(setError)
+      .finally(() => setVersionsLoaded(true));
+  }, [refreshVersions]);
+
+  // While anything is analyzing poll until every version settles
+  const anyProcessing = versions.some((v) => v.status === 'processing');
+  useEffect(() => {
+    if (!anyProcessing) return;
+    const timer = setInterval(() => refreshVersions().catch(() => {}), 3000);
+    return () => clearInterval(timer);
+  }, [anyProcessing, refreshVersions]);
 
   // Load the selected version's comments and re-fetched whenever the version changes
   useEffect(() => {
@@ -134,6 +167,8 @@ export default function ProjectViewScreen() {
 
   const myRole = project?.members.find((m) => m.userId?._id === user?.id)?.role;
   const isOwner = myRole === 'owner';
+  // Viewers get read only everything (also enforced on backedn)
+  const canComment = myRole === 'owner' || myRole === 'reviewer';
 
   // Waveform reports its instance once used for seeking
   const handleReady = useCallback((ws) => {
@@ -146,6 +181,10 @@ export default function ProjectViewScreen() {
     setActiveId(null);
     setDraft(null);
     setText('');
+    setDuration(0);
+    // The old wavesurfer gets destroyed on switch and a version without audio never mounts a new one,
+    // so null the ref or spacebar would still control the old destroyed instance
+    wsRef.current = null;
     setComments([]); // the fetch effect reloads for the new version
   }
 
@@ -181,27 +220,11 @@ export default function ProjectViewScreen() {
     }
   }
 
-// Mock upload until the upload backend is implemented
-// Reuses the latest version's clip and analysis for now
-  function handleUpload(file) {
-    const latest = versions[0];
-    const newVersion = {
-      _id: crypto.randomUUID(),
-      v: `v${versions.length + 1}`,
-      file: file.name,
-      who: 'uploaded by you',
-      when: 'just now',
-      meta: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-      status: 'ready',
-      url: latest?.url,
-      analysis: latest?.analysis,
-      size: file.size,
-    };
-    setVersions((prev) => [newVersion, ...prev]);
-    setCurrentId(newVersion._id);
-    setActiveId(null);
-    setDraft(null);
-    setText('');
+  async function handleUpload(file) {
+    const created = await uploadVersion(id, file);
+    audioUrlRef.current.set(created._id, URL.createObjectURL(file));
+    await refreshVersions();
+    selectVersion(created._id);
     setModal(null);
   }
 
@@ -211,7 +234,7 @@ export default function ProjectViewScreen() {
       await deleteProject(id);
       navigate('/projects');
     } catch (err) {
-      setError(err.message);
+      setError(err);
       setDeleting(false);
       setModal(null);
     }
@@ -231,10 +254,8 @@ export default function ProjectViewScreen() {
   if (error || !project) {
     return (
       <>
-        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, 'Not found']} />
-        <div style={{ padding: '30px 36px' }}>
-          <p className="mono" style={{ fontSize: 13, color: 'var(--bad)' }}>{error || 'Project not found'}</p>
-        </div>
+        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, '…']} />
+        <ErrorCard status={error?.status} />
       </>
     );
   }
@@ -258,7 +279,7 @@ export default function ProjectViewScreen() {
           {!versionsLoaded ? (
             <p className="mono dim" style={{ fontSize: 13, marginTop: 22 }}>Loading versions…</p>
           ) : !currentVersion ? (
-            <EmptyProject onUpload={() => setModal('upload')} />
+            <EmptyProject isOwner={isOwner} onUpload={() => setModal('upload')} />
           ) : (
             <>
               <div style={{ height: 22 }} />
@@ -266,26 +287,29 @@ export default function ProjectViewScreen() {
                 versions={versions}
                 selected={currentId}
                 expanded={expanded}
+                isOwner={isOwner}
                 onToggleExpand={() => setExpanded((v) => !v)}
-                playing={playing}
-                onTogglePlay={() => wsRef.current?.playPause()}
                 onSelectVersion={selectVersion}
                 onDiff={() => navigate(`/projects/${id}/diff`)}
                 onNewVersion={() => setModal('upload')}
               />
 
               <div style={{ height: 22 }} />
-              <Waveform
-                url={currentVersion.url}
-                comments={numberedComments}
-                activeId={activeId}
-                draft={draft}
-                onReady={handleReady}
-                onPlayingChange={setPlaying}
-                onDuration={setDuration}
-                onPick={setDraft}
-                onSelect={setActiveId}
-              />
+              {currentVersion.url ? (
+                <Waveform
+                  url={currentVersion.url}
+                  comments={numberedComments}
+                  activeId={activeId}
+                  draft={draft}
+                  canComment={canComment}
+                  onReady={handleReady}
+                  onDuration={setDuration}
+                  onPick={setDraft}
+                  onSelect={setActiveId}
+                />
+              ) : (
+                <AudioUnavailable />
+              )}
 
               <div style={{ height: 26 }} />
               <MetadataPanel version={currentVersion} />
@@ -297,9 +321,10 @@ export default function ProjectViewScreen() {
           comments={numberedComments}
           hasVersion={Boolean(currentVersion)}
           activeId={activeId}
-          duration={duration}
+          duration={dur}
           draft={draft}
           text={text}
+          canComment={canComment}
           currentUserId={user?.id}
           onSelect={selectComment}
           onText={setText}

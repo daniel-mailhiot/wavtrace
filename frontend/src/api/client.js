@@ -4,17 +4,21 @@
 const BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 async function request(path, { method = 'GET', body, headers } = {}) {
+  // Uploads send FormData so skip JSON header and let browser set the right one
+  const isForm = body instanceof FormData;
   const res = await fetch(BASE + path, {
     method,
-    credentials: 'include', 
-    headers: { 'Content-Type': 'application/json', ...headers },
-    body: body != null ? JSON.stringify(body) : undefined,
+    credentials: 'include',
+    headers: isForm ? headers : { 'Content-Type': 'application/json', ...headers },
+    body: isForm ? body : body != null ? JSON.stringify(body) : undefined,
   });
 
   // Tolerate an empty body (some responses have none)
   const data = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new Error(data?.message || `Request failed (${res.status})`);
+    const err = new Error(data?.message || `Request failed (${res.status})`);
+    err.status = res.status; // so screens can tell a 403/404 apart from other failures
+    throw err;
   }
   return data;
 }

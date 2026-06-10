@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import AppBar from '../components/AppBar';
+import ErrorCard from '../components/ErrorCard';
 import Eyebrow from '../components/Eyebrow';
 import Pill from '../components/Pill';
 import DiffWaveform from '../components/DiffWaveform';
@@ -31,6 +32,18 @@ function VsHeader({ options, aId, bId, onA, onB, pending }) {
       <Select value={bId} options={options} onChange={onB} accent />
       <span className="wt-grow" />
       {pending ? <Pill tone="warn">analysis pending</Pill> : <Pill tone="ok">both analyzed</Pill>}
+    </div>
+  );
+}
+
+// Analyzed but not stored versions have metadata but no audio to draw
+function MissingAudioNotice({ labels }) {
+  return (
+    <div className="wt-card-2" style={{ minHeight: 160, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 18 }}>
+      <div style={{ fontSize: 14, fontWeight: 600 }}>Waveform overlay unavailable</div>
+      <div className="mono faint" style={{ fontSize: 12, marginTop: 7 }}>
+        {labels.join(' and ')} {labels.length === 1 ? "isn't" : "aren't"} kept in storage, so there's no audio to overlay. The metadata diff below still works
+      </div>
     </div>
   );
 }
@@ -158,14 +171,16 @@ export default function DiffScreen() {
   const [project, setProject] = useState(() => getCachedProject(id));
   const [versions, setVersions] = useState([]);
   const [versionsLoaded, setVersionsLoaded] = useState(false);
+  const [error, setError] = useState(null); // the versions fetch fails with 403/404 for non-members
   const [aId, setAId] = useState(null);
   const [bId, setBId] = useState(null);
 
+  // Breadcrumb name only
   useEffect(() => {
     getProject(id).then(setProject).catch(() => {});
   }, [id]);
 
-  // Default to comparing the two newest, the list comes back newest first
+  // Default to comparing the two newest
   useEffect(() => {
     listVersions(id)
       .then((data) => {
@@ -173,7 +188,7 @@ export default function DiffScreen() {
         setBId(data[0]?._id ?? null);
         setAId((data[1] ?? data[0])?._id ?? null);
       })
-      .catch(() => {})
+      .catch(setError)
       .finally(() => setVersionsLoaded(true));
   }, [id]);
 
@@ -185,6 +200,8 @@ export default function DiffScreen() {
   // Waveforms draw from peak data but the metadata diff needs both sides analyzed
   const ready = (v) => v?.analysisStatus === 'ready';
   const pendingVer = !ready(bVersion) ? bVersion : !ready(aVersion) ? aVersion : null;
+  // Either side without a stored file means no overlay (metadata diff still fine)
+  const missingAudio = [aVersion, bVersion].filter((v) => v && !v.url);
   const rows =
     ready(aVersion) && ready(bVersion)
       ? computeDiff(diffMetadata(aVersion), diffMetadata(bVersion))
@@ -202,7 +219,9 @@ export default function DiffScreen() {
       />
 
       <div style={{ flex: 1, overflow: 'auto', padding: '28px 30px 40px' }}>
-        {!versionsLoaded ? (
+        {error ? (
+          <ErrorCard status={error.status} />
+        ) : !versionsLoaded ? (
           <p className="mono dim" style={{ fontSize: 13 }}>Loading versions…</p>
         ) : versions.length < 2 ? (
           <p className="mono dim" style={{ fontSize: 13 }}>Need at least two versions to compare</p>
@@ -215,9 +234,13 @@ export default function DiffScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                   <Eyebrow style={{ margin: 0 }}>Waveform overlay</Eyebrow>
                   <span className="wt-grow" />
-                  <Legend aVer={vlabel(aVersion)} />
+                  {missingAudio.length === 0 && <Legend aVer={vlabel(aVersion)} />}
                 </div>
-                <DiffWaveform baselineUrl={aVersion.url} compareUrl={bVersion.url} />
+                {missingAudio.length === 0 ? (
+                  <DiffWaveform baselineUrl={aVersion.url} compareUrl={bVersion.url} />
+                ) : (
+                  <MissingAudioNotice labels={missingAudio.map(vlabel)} />
+                )}
               </div>
 
               {pendingVer ? (
