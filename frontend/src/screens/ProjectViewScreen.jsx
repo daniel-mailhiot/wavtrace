@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import AppBar from '../components/AppBar';
+import ErrorCard from '../components/ErrorCard';
 import Waveform from '../components/Waveform';
 import ProjectHeader from '../components/ProjectView/ProjectHeader';
 import VersionHistory from '../components/ProjectView/VersionHistory';
@@ -77,7 +78,7 @@ export default function ProjectViewScreen() {
 
   const [project, setProject] = useState(() => getCachedProject(id));
   const [loading, setLoading] = useState(!project);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   const [modal, setModal] = useState(null); // 'rename' | 'collab' | 'delete'
   const [deleting, setDeleting] = useState(false);
 
@@ -89,7 +90,6 @@ export default function ProjectViewScreen() {
   const [activeId, setActiveId] = useState(null);
   const [draft, setDraft] = useState(null); // pending { t } or { region } from a wave click/drag
   const [text, setText] = useState('');
-  const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const wsRef = useRef(null);
@@ -110,7 +110,7 @@ export default function ProjectViewScreen() {
   useEffect(() => {
     getProject(id)
       .then(setProject)
-      .catch((err) => setError(err.message))
+      .catch(setError)
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -132,7 +132,7 @@ export default function ProjectViewScreen() {
   useEffect(() => {
     refreshVersions()
       .then((adapted) => setCurrentId(adapted[0]?._id ?? null))
-      .catch((err) => setError(err.message))
+      .catch(setError)
       .finally(() => setVersionsLoaded(true));
   }, [refreshVersions]);
 
@@ -167,6 +167,8 @@ export default function ProjectViewScreen() {
 
   const myRole = project?.members.find((m) => m.userId?._id === user?.id)?.role;
   const isOwner = myRole === 'owner';
+  // Viewers get read only everything (also enforced on backedn)
+  const canComment = myRole === 'owner' || myRole === 'reviewer';
 
   // Waveform reports its instance once used for seeking
   const handleReady = useCallback((ws) => {
@@ -180,7 +182,6 @@ export default function ProjectViewScreen() {
     setDraft(null);
     setText('');
     setDuration(0);
-    setPlaying(false);
     // The old wavesurfer gets destroyed on switch and a version without audio never mounts a new one,
     // so null the ref or spacebar would still control the old destroyed instance
     wsRef.current = null;
@@ -233,7 +234,7 @@ export default function ProjectViewScreen() {
       await deleteProject(id);
       navigate('/projects');
     } catch (err) {
-      setError(err.message);
+      setError(err);
       setDeleting(false);
       setModal(null);
     }
@@ -253,10 +254,8 @@ export default function ProjectViewScreen() {
   if (error || !project) {
     return (
       <>
-        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, 'Not found']} />
-        <div style={{ padding: '30px 36px' }}>
-          <p className="mono" style={{ fontSize: 13, color: 'var(--bad)' }}>{error || 'Project not found'}</p>
-        </div>
+        <AppBar crumbs={[{ label: 'Projects', to: '/projects' }, '…']} />
+        <ErrorCard status={error?.status} />
       </>
     );
   }
@@ -280,7 +279,7 @@ export default function ProjectViewScreen() {
           {!versionsLoaded ? (
             <p className="mono dim" style={{ fontSize: 13, marginTop: 22 }}>Loading versions…</p>
           ) : !currentVersion ? (
-            <EmptyProject onUpload={() => setModal('upload')} />
+            <EmptyProject isOwner={isOwner} onUpload={() => setModal('upload')} />
           ) : (
             <>
               <div style={{ height: 22 }} />
@@ -288,9 +287,8 @@ export default function ProjectViewScreen() {
                 versions={versions}
                 selected={currentId}
                 expanded={expanded}
+                isOwner={isOwner}
                 onToggleExpand={() => setExpanded((v) => !v)}
-                playing={playing}
-                onTogglePlay={() => wsRef.current?.playPause()}
                 onSelectVersion={selectVersion}
                 onDiff={() => navigate(`/projects/${id}/diff`)}
                 onNewVersion={() => setModal('upload')}
@@ -303,8 +301,8 @@ export default function ProjectViewScreen() {
                   comments={numberedComments}
                   activeId={activeId}
                   draft={draft}
+                  canComment={canComment}
                   onReady={handleReady}
-                  onPlayingChange={setPlaying}
                   onDuration={setDuration}
                   onPick={setDraft}
                   onSelect={setActiveId}
@@ -326,6 +324,7 @@ export default function ProjectViewScreen() {
           duration={dur}
           draft={draft}
           text={text}
+          canComment={canComment}
           currentUserId={user?.id}
           onSelect={selectComment}
           onText={setText}
