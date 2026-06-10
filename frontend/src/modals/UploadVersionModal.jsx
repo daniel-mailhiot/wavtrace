@@ -1,16 +1,17 @@
 import { useRef, useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
 import ModalFrame from '../components/Modal/ModalFrame';
 import { ModalHead, ModalFoot } from '../components/Modal/ModalParts';
 import Button from '../components/Button';
 import { UploadIcon } from '../components/icons';
 
 const ALLOWED = ['wav', 'mp3', 'flac'];
-const MAX_MB = 15;
+const MAX_MB = 50;
 
 const extOf = (name) => name.split('.').pop().toLowerCase();
 const sizeMB = (bytes) => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 
-// Temp client-side check until real upload validation is built
+// Check before upload (server validates)
 function validate(file) {
   if (!ALLOWED.includes(extOf(file.name))) return 'Unsupported format. Use WAV, MP3 or FLAC.';
   if (file.size > MAX_MB * 1024 * 1024) return `File is too large. Max ~${MAX_MB} MB.`;
@@ -107,10 +108,11 @@ function SelectedFile({ file, onRemove }) {
   );
 }
 
-// Mock upload, a valid file enables Upload and appends a new version
 export default function UploadVersionModal({ versions, projectName, onClose, onUpload }) {
+  const { user } = useAuth();
   const [file, setFile] = useState(null);
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   const isFirst = versions.length === 0;
   const nextLabel = `v${versions.length + 1}`;
 
@@ -125,31 +127,55 @@ export default function UploadVersionModal({ versions, projectName, onClose, onU
     setFile(picked);
   }
 
+  async function submit() {
+    setBusy(true);
+    setError('');
+    try {
+      await onUpload(file);
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  function close() {
+    if (!busy) onClose();
+  }
+
   return (
-    <ModalFrame onClose={onClose} width={560}>
-      <ModalHead title={isFirst ? 'Upload first version' : 'Upload next version'} sub={projectName} onClose={onClose} />
+    <ModalFrame onClose={close} width={560}>
+      <ModalHead title={isFirst ? 'Upload first version' : 'Upload next version'} sub={projectName} onClose={close} />
 
       <div style={{ display: 'flex', gap: 24, padding: '22px 28px 6px', alignItems: 'stretch' }}>
         <UploadHistory versions={versions} nextLabel={nextLabel} ready={Boolean(file)} />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           {file ? (
-            <SelectedFile file={file} onRemove={() => setFile(null)} />
+            <SelectedFile file={file} onRemove={() => !busy && setFile(null)} />
           ) : (
-            <>
-              <DropZone onPick={pick} />
-              {error && (
-                <div className="mono" style={{ fontSize: 12, color: 'var(--bad)', marginTop: 12 }}>{error}</div>
-              )}
-            </>
+            <DropZone onPick={pick} />
+          )}
+          {error && (
+            <div className="mono" style={{ fontSize: 12, color: 'var(--bad)', marginTop: 12 }}>{error}</div>
           )}
         </div>
       </div>
 
+      {!user?.hasStorage && (
+        <div className="mono faint" style={{ fontSize: 11.5, lineHeight: 1.6, padding: '14px 28px 0' }}>
+          <p style={{ margin: 0 }}>
+            This account doesn't have upload access. You can add audio to be analyzed for metadata, but the file isn't kept after you leave the page.
+          </p>
+          <p style={{ margin: '8px 0 0' }}>
+            To enable upload storage for this account contact daniel.mailhiot.dev@gmail.com
+          </p>
+        </div>
+      )}
+
       <ModalFoot>
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button variant="primary" disabled={!file} onClick={() => onUpload(file)}>
-          <UploadIcon /> Upload
+        <Button variant="ghost" onClick={close} disabled={busy}>Cancel</Button>
+        <Button variant="primary" disabled={!file || busy} onClick={submit}>
+          <UploadIcon /> {busy ? 'Uploading…' : 'Upload'}
         </Button>
       </ModalFoot>
     </ModalFrame>
