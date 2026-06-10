@@ -11,6 +11,9 @@ export const register = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'All fields required' });
     }
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters' });
+    }
 
     const existing = await User.findOne({ email });
     if (existing) {
