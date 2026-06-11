@@ -4,7 +4,6 @@ wavTrace is a full-stack web app for audio review and revision tracking, similar
 
 
 ## Planned features 
-(attach photos when I'm done)
 
 **Versioning** - Tracks the full history of an audio project across iterations, cleanly logging who said what, when, and on which version so changes and feedback are easy to follow over time.
 
@@ -180,7 +179,7 @@ Upon account creation, audio upload storage is **disabled by default** and needs
 
 - **Language:** JavaScript
 - **Frontend:** React + Vite, React Router
-- **Backend:** Node.js + Express
+- **Backend:** Node.js (v24.13.1) + Express
 - **Audio analysis:** FFmpeg + ffprobe
 - **Waveform:** wavesurfer.js v7
 - **Database:** MongoDB Atlas with Mongoose
