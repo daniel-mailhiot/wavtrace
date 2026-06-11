@@ -3,7 +3,7 @@
 wavTrace is a full-stack web app for audio review and revision tracking, similar concept to GitHub but designed for team-based audio deliverables instead of software development. A user uploads audio to be reviewed, the reviewer leaves timestamped notes for changes, and the user iterates based on feedback, with differences between iterations tracked using a version history pinned to the notes and feedback from each version.
 
 
-## Planned Features 
+## Planned features 
 (attach photos when I'm done)
 
 **Versioning** - Tracks the full history of an audio project across iterations, cleanly logging who said what, when, and on which version so changes and feedback are easy to follow over time.
@@ -20,14 +20,15 @@ wavTrace is a full-stack web app for audio review and revision tracking, similar
 
 **Project search** - Search across projects by name.
 
-**Approval** - Mark a version as "approved" or "final." Locks it from further comments and visually flags it in the version history.
+**Project sharing** - Add a member as a reviewer or viewer and share the URL with them.
 
 
-## Getting Started (local setup)
+## Getting started (local setup)
 
 ### Prerequisites
-- Node.js (v20 or newer)
+- Node.js (v20.19 or newer)
 - A MongoDB Atlas connection string
+- Optional: a Cloudflare account with an R2 bucket (see "Audio storage" below, app runs without it)
 
 ### 1. Clone and install
 
@@ -55,7 +56,9 @@ SESSION_SECRET=any-long-random-string
 PORT=5000
 ```
 
-Optional: If you want to run the Newman API tests (see below), also add `MONGO_URI_TEST` (same connection string, but with `wavtrace_test` as the database name in the path).
+Optional: If you want to run the Newman API tests (see "Testing" below), also add `MONGO_URI_TEST` (same connection string, but with `wavtrace_test` as the database name in the path).
+
+Optional: If you want uploaded audio files to be stored, see "Audio storage (Cloudflare R2)" below. Without it the app still runs and uploads still get analyzed but the files aren't stored.
 
 ### 3. Run the app
 
@@ -72,6 +75,32 @@ npm run dev
 ```
 
 Open frontend URL shown in the terminal (`http://localhost:5173`) to use the app.
+
+### Optional: Audio storage (Cloudflare R2)
+
+R2 setup is optional. Without it the app still runs and uploads get analyzed with FFmpeg, but the audio file isn't stored after. The pre loaded demo project's audio is unaffected since it is served directly from the backend.
+
+To enable audio upload storage you'll need a Cloudflare account with R2 set up (Cloudflare requires a payment method on file to activate R2 even on the free tier).
+
+> Note: I had issues on their dashboard where it locked me out of my R2 after I already passed the verification.
+
+If you want to set up R2 I'd recommend following their docs:
+
+1. Create a bucket: [R2 getting started](https://developers.cloudflare.com/r2/get-started/)
+2. Create an R2 API token with **Object Read & Write** permission scoped to the bucket: [R2 authentication](https://developers.cloudflare.com/r2/api/tokens/). Copy the Access Key ID and Secret Access Key (the secret can't be viewed again).
+3. Add a CORS policy on the bucket allowing `GET` and `HEAD` from `http://localhost:5173`: [R2 CORS](https://developers.cloudflare.com/r2/buckets/cors/). Without this the browser blocks playback and the waveform stays blank.
+
+Then add these to `backend/.env` (restart backend after adding):
+
+```bash
+R2_ACCOUNT_ID=your-cloudflare-account-id
+R2_ACCESS_KEY_ID=from-the-r2-api-token
+R2_SECRET_ACCESS_KEY=from-the-r2-api-token
+R2_BUCKET=your-bucket-name
+STORAGE_ALLOWED_EMAILS=you@example.com
+```
+
+`STORAGE_ALLOWED_EMAILS` is a comma-separated allowlist of account emails. Only uploads from these accounts are kept in R2 and everyone else's uploads are analyzed and then discarded. This is the per-account storage safeguard mentioned in "Creating your own project" below.
 
 
 ## Testing
@@ -133,22 +162,32 @@ Requires a `MONGO_URI_TEST` value in `backend/.env`: the same Atlas connection s
 - Run the tests on every push with GitHub Actions.
 
 
-## Usage
-(how to use the app, fill out when I'm near end)
+## How to use the app
 
+Register an account and explore the demo project it comes with, or create your own. Upload audio, add iterations, manage members, and share your project with collaborators to leave comments or review your work.
 
-## Tech Stack
+### Demo project example
+**Every new registration seeds a personal "Demo Project" ready to explore.** If you just want a quick look, this comes pre-loaded. 
+
+- You can toggle between previous iterations and listen to them, view feedback and comments from reviewers across versions, and compare metadata changes in the diff view.
+
+> *Demo reviewer accounts note: The demo project comes with two demo reviewers. If you clone the repo, they will be created automatically as real user accounts the first time anyone registers, then reused as the reviewers on every new user's demo project. Their password comes from a `DEMO_REVIEWER_PASSWORD` env var, and when the var isn't set the accounts are created with a randomly generated password instead of a hardcoded one.*
+
+### Creating your own project
+Upon account creation, audio upload storage is **disabled by default** and needs to be manually enabled per account. This is just a temporary extra safeguard for managing the app's Cloudflare R2 storage usage. For the deployed app, if you want your uploaded audio to be stored and playable, just let me know and I will enable it for the account.
+
+## Tech stack
 
 - **Language:** JavaScript
 - **Frontend:** React + Vite, React Router
 - **Backend:** Node.js + Express
 - **Audio analysis:** FFmpeg + ffprobe
 - **Waveform:** wavesurfer.js v7
-- **Database:** MongoDB Atlas
+- **Database:** MongoDB Atlas with Mongoose
 - **Auth:** Passport (local strategy), express-session, connect-mongo, bcryptjs
 - **File storage:** Cloudflare R2
-- **Testing:** Postman/Newman (API), Playwright (E2E)
+- **Testing:** Postman/Newman (API)
 
 
-## Future Improvements
-(update at end)
+## Future improvements
+- Mark a version as "approved" or "final." Locks it from further comments and visually flags it in the version history.
