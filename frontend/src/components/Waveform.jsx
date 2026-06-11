@@ -107,37 +107,45 @@ export default function Waveform({
 
   return (
     <div className="wt-wave-wrap">
-      {(comments.length > 0 || draft) && (
-        <div className="wt-mk-rail">
-          {comments.map((c) => {
-            const isRegion = Boolean(c.region);
-            const left = isRegion ? `calc(${c.region[0] * 100}% + 5px)` : `${c.t * 100}%`;
-            return (
-              <div
-                key={c.id}
-                className={'wt-mk' + (isRegion ? ' region' : '') + (c.id === activeId ? ' active' : '')}
-                style={{ left }}
-                onClick={() => {
-                  wavesurfer?.seekTo(isRegion ? c.region[0] : c.t);
-                  onSelect?.(c.id);
-                }}
-              >
-                {c.n}
-              </div>
-            );
-          })}
-
-          {/* Pending comment indicator for spot clicked before its comment is saved */}
-          {draft && (
+      {/* Rail always renders (even when empty) so the waveform doesn't jump down when markers load in */}
+      <div className="wt-mk-rail">
+        {comments.map((c) => {
+          const isRegion = Boolean(c.region);
+          const left = isRegion ? `calc(${c.region[0] * 100}% + 5px)` : `${c.t * 100}%`;
+          return (
             <div
-              className={'wt-mk draft' + (draft.region ? ' region' : '')}
-              style={{ left: draft.region ? `calc(${draft.region[0] * 100}% + 5px)` : `${draft.t * 100}%` }}
-            />
-          )}
-        </div>
-      )}
+              key={c.id}
+              className={'wt-mk' + (isRegion ? ' region' : '') + (c.id === activeId ? ' active' : '')}
+              style={{ left }}
+              onClick={() => {
+                wavesurfer?.seekTo(isRegion ? c.region[0] : c.t);
+                onSelect?.(c.id);
+              }}
+            >
+              {c.n}
+            </div>
+          );
+        })}
 
-      <div className="wt-wave" ref={containerRef} />
+        {/* Pending comment indicator for spot clicked before its comment is saved */}
+        {draft && (
+          <div
+            className={'wt-mk draft' + (draft.region ? ' region' : '')}
+            style={{ left: draft.region ? `calc(${draft.region[0] * 100}% + 5px)` : `${draft.t * 100}%` }}
+          />
+        )}
+      </div>
+
+      <div style={{ position: 'relative' }}>
+        <div className="wt-wave" ref={containerRef} />
+        {/* Bars only draw once the audio decodes, spinner fills the blank panel until then */}
+        {!isReady && (
+          <div className="wt-wave-loading">
+            <span className="wt-spinner" />
+            <span className="mono faint" style={{ fontSize: 12 }}>Loading audio…</span>
+          </div>
+        )}
+      </div>
 
       <div className="note" style={{ marginTop: 12 }}>
         {canComment

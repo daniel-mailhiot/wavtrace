@@ -89,18 +89,24 @@ function AddComment({ hasVersion, draft, text, duration, onText, onSubmit }) {
   );
 }
 
-export default function CommentsRail({ comments, hasVersion, activeId, duration, draft, text, canComment, currentUserId, onSelect, onText, onSubmit, onDelete }) {
+export default function CommentsRail({ comments, loading, hasVersion, activeId, duration, draft, text, canComment, currentUserId, onSelect, onText, onSubmit, onDelete }) {
   return (
     <div className="wt-pv-rail">
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
         <span style={{ fontSize: 14.5, fontWeight: 600 }}>Comments</span>
-        <Pill>{comments.length}</Pill>
+        <Pill>{loading ? '…' : comments.length}</Pill>
         <span className="wt-grow" />
         <span className="mono faint" style={{ fontSize: 11.5 }}>by time ▾</span>
       </div>
 
       <div className="wt-pv-rail-list" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 9 }}>
-        {comments.length === 0 ? (
+        {loading ? (
+          // Placeholder cards while the selected version's comments load
+          <>
+            <div className="wt-skel" style={{ height: 74 }} />
+            <div className="wt-skel" style={{ height: 74 }} />
+          </>
+        ) : comments.length === 0 ? (
           <p className="mono faint" style={{ fontSize: 13, margin: 0 }}>No comments yet</p>
         ) : (
           comments.map((c) => (

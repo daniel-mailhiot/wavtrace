@@ -87,6 +87,7 @@ export default function ProjectViewScreen() {
   const [versionsLoaded, setVersionsLoaded] = useState(false);
   const [currentId, setCurrentId] = useState(null); // selected version by _id
   const [comments, setComments] = useState([]); // raw API comments for the current version
+  const [commentsLoading, setCommentsLoading] = useState(true);
   const [activeId, setActiveId] = useState(null);
   const [draft, setDraft] = useState(null); // pending { t } or { region } from a wave click/drag
   const [text, setText] = useState('');
@@ -149,7 +150,8 @@ export default function ProjectViewScreen() {
     if (!currentId) return;
     listComments(id, currentId)
       .then(setComments)
-      .catch(() => setComments([]));
+      .catch(() => setComments([]))
+      .finally(() => setCommentsLoading(false));
   }, [id, currentId]);
 
   // Spacebar play/pause (not while typing a comment)
@@ -186,6 +188,7 @@ export default function ProjectViewScreen() {
     // so null the ref or spacebar would still control the old destroyed instance
     wsRef.current = null;
     setComments([]); // the fetch effect reloads for the new version
+    setCommentsLoading(true);
   }
 
   // On card click highlight and seek the playhead to its time
@@ -319,6 +322,8 @@ export default function ProjectViewScreen() {
 
         <CommentsRail
           comments={numberedComments}
+          // Empty projects never fetch comments
+          loading={!versionsLoaded || (Boolean(currentVersion) && commentsLoading)}
           hasVersion={Boolean(currentVersion)}
           activeId={activeId}
           duration={dur}

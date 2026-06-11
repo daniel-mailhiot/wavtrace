@@ -148,6 +148,9 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-wave ::part(cursor) { box-shadow: 0 0 10px var(--accent-glow); }
 .wt-wave ::part(region) { border-left: 1.5px dashed var(--accent-2-line); border-right: 1.5px dashed var(--accent-2-line); }
 .wt-wave-wrap { position: relative; }
+/* Centered over the wave panel while the clip downloads and decodes */
+.wt-wave-loading { position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px; pointer-events: none; }
 /* Empty-project upload prompt sitting where the waveform would be */
 .wt-wave-empty { width: 100%; min-height: 196px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 13px; text-align: center;
@@ -245,6 +248,11 @@ textarea.wt-input { height: auto; padding: 12px 14px; resize: none; line-height:
 .wt-spinner { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line);
   border-top-color: var(--accent); animation: wt-spin 0.7s linear infinite; }
 @keyframes wt-spin { to { transform: rotate(360deg); } }
+
+/* Pulsing skeleton block, holds the space while real content loads in */
+.wt-skel { background: var(--panel-3); border-radius: var(--r-sm);
+  animation: wt-skel-pulse 1.3s ease-in-out infinite; }
+@keyframes wt-skel-pulse { 50% { opacity: 0.45; } }
 
 /*
 Responsive layout
