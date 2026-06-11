@@ -2,24 +2,25 @@
 
 wavTrace is a full-stack web app for audio review and revision tracking, similar concept to GitHub but designed for team-based audio deliverables instead of software development. A user uploads audio to be reviewed, the reviewer leaves timestamped notes for changes, and the user iterates based on feedback, with differences between iterations tracked using a version history pinned to the notes and feedback from each version.
 
+**Live site:** [https://wavtrace.onrender.com](https://wavtrace.onrender.com)
 
-## Planned features 
+## Features
+
+**Demo project** - Every register comes pre loaded with a demo project to explore. Toggle between previous iterations and listen to them, view feedback and comments from reviewers across versions, and compare metadata changes in the diff view.
+
+**Project sharing** - Manage members and share your project with collaborators to leave comments or review your work. Auth uses role-based permissions (owner, reviewer, view-only).
+
+**Pin and region markers** - Reviewers can pin feedback comments at a specific time or highlight a section of the waveform view.
 
 **Versioning** - Tracks the full history of an audio project across iterations, cleanly logging who said what, when, and on which version so changes and feedback are easy to follow over time.
 
-**User accounts** - Authentication with role-based permissions (owner, reviewer, view-only).
+**Waveform visualizations + diff** - Visual waveform display on the timeline and red/green waveform diff view.
 
-**Pin and region markers** - Reviewers can pin feedback to a specific timestamp or highlight a section of the track, making it clear exactly what each note is referring to.
+**Audio analysis** - Automatically computes (FFmpeg + ffprobe) and displays audio metadata: loudness (LUFS, true peak, LRA), file specs (sample rate, bit depth, duration, format, bitrate), and clipping detection.
 
-**Waveform visualization** - Visual waveform display on the timeline.
+**Auto-detected version diff** - Displays changes between versions based on the audio analysis.
 
-**Metadata** - Displays audio metadata: loudness (LUFS, true peak, LRA), file specs (sample rate, bit depth, duration, format, bitrate), and clipping detection.
-
-**Auto-detected version diff** - Shows changes between versions (loudness, dynamics, duration, file specs, clipping).
-
-**Project search** - Search across projects by name.
-
-**Project sharing** - Add a member as a reviewer or viewer and share the URL with them.
+**Project search** - Search your projects and projects you've been invited to.
 
 
 ## Getting started (local setup)
