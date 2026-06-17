@@ -2,7 +2,7 @@
 
 wavTrace is a full-stack web app for audio review and revision tracking, similar concept to GitHub but designed for team-based audio deliverables instead of software development. A user uploads audio to be reviewed, the reviewer leaves timestamped notes for changes, and the user iterates based on feedback, with differences between iterations tracked using a version history pinned to the notes and feedback from each version.
 
-**Live site:** [https://wavtrace.onrender.com](https://wavtrace.onrender.com)
+**Live site:** [https://wavtrace.app](https://wavtrace.app)
 
 ## Features
 
@@ -190,4 +190,13 @@ Upon account creation, audio upload storage is **disabled by default** and needs
 
 
 ## Future improvements
+- Add Mocha/Chai tests and Playwright in addition to Newman.
 - Mark a version as "approved" or "final." Locks it from further comments and visually flags it in the version history.
+- After being invited as a collaborator, the invited user should be able to accept/deny the invitation instead of having it automatically added to their project list.
+- Add change password option and add OAuth option.
+- Add contact portal for bugs or support.
+- Improve handling of upload restrictions for new accounts and rate limiting.
+
+
+## Known issues
+- Some password manager extensions can temporarily block clicks on the search box, profile icon, and new project button after sign in. Disabling the extension removes the bug.
