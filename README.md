@@ -22,6 +22,8 @@ wavTrace is a full-stack web app for audio review and revision tracking, similar
 
 **Project search** - Search your projects and projects you've been invited to.
 
+**Rate limiting** - Per-IP limits on the API with stricter limits on login/register attempts and uploads.
+
 
 ## Getting started (local setup)
 
@@ -109,6 +111,8 @@ STORAGE_ALLOWED_EMAILS=you@example.com
 
 An API suite covering auth and project routes, including role-based permission rules. Test data is created and stored in a separate `wavtrace_test` database so the real db doesn't get polluted with dummy data.
 
+Rate limits are disabled in test mode (`NODE_ENV=test`) so the suite's back-to-back requests don't trip them.
+
 #### Coverage
 14 requests, 24 assertions:
 
@@ -195,7 +199,7 @@ Upon account creation, audio upload storage is **disabled by default** and needs
 - After being invited as a collaborator, the invited user should be able to accept/deny the invitation instead of having it automatically added to their project list.
 - Add change password option and add OAuth option.
 - Add contact portal for bugs or support.
-- Improve handling of upload restrictions for new accounts and rate limiting.
+- Improve handling of upload restrictions for new accounts.
 
 
 ## Known issues
