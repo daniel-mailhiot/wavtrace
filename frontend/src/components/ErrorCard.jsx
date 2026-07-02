@@ -2,10 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import Button from './Button';
 
 // Fallback when a project fetch fails
-// 403 = signed in but not a member, 404 = deleted or a bad link
+// 403 = signed in but not a member, 404 = deleted or a bad link, 429 = rate limited
 const COPY = {
   403: { title: "You don't have access to this project", detail: 'Ask the project owner to add you as a member' },
   404: { title: 'Project not found', detail: 'It may have been deleted, or the link is wrong' },
+  429: { title: 'Too many requests', detail: 'Wait a minute and try again' },
 };
 
 export default function ErrorCard({ status }) {
