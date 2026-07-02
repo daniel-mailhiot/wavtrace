@@ -4,6 +4,7 @@ import requireProjectRole from '../middleware/projectRole.js';
 import loadVersion from '../middleware/loadVersion.js';
 import loadComment from '../middleware/loadComment.js';
 import handleUpload from '../middleware/upload.js';
+import { uploadLimiter } from '../middleware/rateLimit.js';
 import {
   createProject,
   listProjects,
@@ -33,7 +34,7 @@ router.delete('/:id/members/:userId', requireProjectRole('owner'), removeMember)
 
 router.get('/:id/versions', requireProjectRole(), listVersions);
 // Role check runs before multer so non-owners are rejected before any files save
-router.post('/:id/versions', requireProjectRole('owner'), handleUpload, uploadVersion);
+router.post('/:id/versions', uploadLimiter, requireProjectRole('owner'), handleUpload, uploadVersion);
 
 router.get('/:id/versions/:versionId/comments', requireProjectRole(), loadVersion, listComments);
 router.post('/:id/versions/:versionId/comments', requireProjectRole('owner', 'reviewer'), loadVersion, createComment);
