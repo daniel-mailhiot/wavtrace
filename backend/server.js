@@ -9,10 +9,14 @@ import MongoStore from 'connect-mongo';
 import passport from './config/passport.js';
 import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
+import { apiLimiter } from './middleware/rateLimit.js';
 import Version from './models/Version.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+
+// 2 hops, cloudflare + render in front
+app.set('trust proxy', 2);
 
 // Use test DB during API tests otherwise use real one
 const mongoUri =
@@ -23,7 +27,9 @@ const mongoUri =
 app.use(cors());
 app.use(express.json());
 
-// Session cookie stored in Mongo so logins survive restarts
+app.use('/api', apiLimiter);
+
+// Session cookie
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
