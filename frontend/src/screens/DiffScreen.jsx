@@ -13,7 +13,7 @@ import { diffMetadata } from '../utils/formatMetadata';
 import { computeDiff } from '../utils/computeDiff';
 
 const TONE_COLOR = {
-  accent: 'var(--accent)',
+  accent: '#8ab7ff',
   ok: 'var(--ok)',
   dim: 'var(--ink-dim)',
   bad: 'var(--bad)',
@@ -31,7 +31,7 @@ function VsHeader({ options, aId, bId, onA, onB, pending }) {
       <span className="mono faint" style={{ fontSize: 16 }}>→</span>
       <Select value={bId} options={options} onChange={onB} accent />
       <span className="wt-grow" />
-      {pending ? <Pill tone="warn">analysis pending</Pill> : <Pill tone="ok">both analyzed</Pill>}
+      {pending && <Pill tone="warn">analysis pending</Pill>}
     </div>
   );
 }
@@ -61,7 +61,7 @@ function PendingDiff({ version }) {
 }
 
 // Color key for the overlay
-function Legend({ aVer }) {
+function Legend({ bVer }) {
   const item = (color, label) => (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
       <span style={{ width: 10, height: 10, borderRadius: 2, background: color }} />
@@ -70,9 +70,9 @@ function Legend({ aVer }) {
   );
   return (
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-      {item('#565a67', `${aVer} baseline`)}
-      {item('var(--ok)', 'louder')}
-      {item('var(--bad)', 'quieter')}
+      {item('#565a67', 'shared overlap')}
+      {item('var(--ok)', `${bVer} louder`)}
+      {item('var(--bad)', `${bVer} quieter`)}
     </div>
   );
 }
@@ -234,7 +234,7 @@ export default function DiffScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                   <Eyebrow style={{ margin: 0 }}>Waveform overlay</Eyebrow>
                   <span className="wt-grow" />
-                  {missingAudio.length === 0 && <Legend aVer={vlabel(aVersion)} />}
+                  {missingAudio.length === 0 && <Legend bVer={vlabel(bVersion)} />}
                 </div>
                 {missingAudio.length === 0 ? (
                   // Key remounts the waveform to keep stale bars from showing while a new pair decodes
