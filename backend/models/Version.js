@@ -9,6 +9,8 @@ const versionSchema = new mongoose.Schema({
   originalName: { type: String, required: true },
   size: { type: Number, required: true },
   mimeType: { type: String, required: true },
+  // optional note from the uploader about what changed in this version
+  description: { type: String, default: '' },
   analysisStatus: { type: String, enum: ['processing', 'ready', 'failed'], default: 'processing' },
   // ffmpeg numbers frontend formats for display
   analysis: {

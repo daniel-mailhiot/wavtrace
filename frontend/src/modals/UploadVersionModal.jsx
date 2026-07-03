@@ -78,7 +78,7 @@ function DropZone({ onPick }) {
   );
 }
 
-function SelectedFile({ file, onRemove }) {
+function SelectedFile({ file, description, busy, onDescription, onRemove }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: 14, border: '1px solid var(--accent-line)', background: 'var(--accent-softer)', borderRadius: 10 }}>
@@ -101,9 +101,16 @@ function SelectedFile({ file, onRemove }) {
           ×
         </button>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 14, fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--ok)' }}>
-        <span className="wt-dot" /> passed validation · analysis runs after upload
-      </div>
+      <textarea
+        className="wt-input"
+        rows={2}
+        maxLength={300}
+        value={description}
+        disabled={busy}
+        onChange={(e) => onDescription(e.target.value)}
+        placeholder="Add a note for this version (optional)"
+        style={{ marginTop: 14 }}
+      />
     </div>
   );
 }
@@ -111,6 +118,7 @@ function SelectedFile({ file, onRemove }) {
 export default function UploadVersionModal({ versions, projectName, onClose, onUpload }) {
   const { user } = useAuth();
   const [file, setFile] = useState(null);
+  const [description, setDescription] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const isFirst = versions.length === 0;
@@ -131,7 +139,7 @@ export default function UploadVersionModal({ versions, projectName, onClose, onU
     setBusy(true);
     setError('');
     try {
-      await onUpload(file);
+      await onUpload(file, description.trim());
     } catch (err) {
       setError(err.message);
       setBusy(false);
@@ -151,7 +159,13 @@ export default function UploadVersionModal({ versions, projectName, onClose, onU
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           {file ? (
-            <SelectedFile file={file} onRemove={() => !busy && setFile(null)} />
+            <SelectedFile
+              file={file}
+              description={description}
+              busy={busy}
+              onDescription={setDescription}
+              onRemove={() => !busy && setFile(null)}
+            />
           ) : (
             <DropZone onPick={pick} />
           )}

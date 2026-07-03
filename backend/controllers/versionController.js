@@ -45,6 +45,13 @@ export const uploadVersion = async (req, res) => {
       return res.status(400).json({ message: 'Version limit reached (max 30 per project)' });
     }
 
+    // Optional description, multer puts the text fields on req.body
+    const description = (req.body.description || '').trim();
+    if (description.length > 300) {
+      await unlink(req.file.path).catch(() => {});
+      return res.status(400).json({ message: 'Description is too long (max 300 characters)' });
+    }
+
     const latest = await Version.findOne({ projectId: req.project._id }).sort({ versionNumber: -1 });
     const versionNumber = latest ? latest.versionNumber + 1 : 1;
 
@@ -72,6 +79,7 @@ export const uploadVersion = async (req, res) => {
       originalName: req.file.originalname,
       size: req.file.size,
       mimeType: req.file.mimetype,
+      description,
       analysisStatus: 'processing',
     });
 
@@ -80,6 +88,24 @@ export const uploadVersion = async (req, res) => {
     analyzeInBackground(version._id, req.file.path, fileKey);
   } catch (err) {
     if (req.file) await unlink(req.file.path).catch(() => {});
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// PATCH /api/projects/:id/versions/:versionId
+// Add or edit the description after upload
+export const updateVersion = async (req, res) => {
+  try {
+    // Empty string allowed so the note can be cleared
+    const description = (req.body.description || '').trim();
+    if (description.length > 300) {
+      return res.status(400).json({ message: 'Description is too long (max 300 characters)' });
+    }
+
+    req.version.description = description;
+    await req.version.save();
+    res.json(req.version);
+  } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 };
