@@ -15,8 +15,8 @@ import {
   updateMember,
   removeMember
 } from '../controllers/projectController.js';
-import { listVersions, uploadVersion } from '../controllers/versionController.js';
-import { listComments, createComment, deleteComment } from '../controllers/commentController.js';
+import { listVersions, uploadVersion, updateVersion } from '../controllers/versionController.js';
+import { listComments, createComment, updateComment, deleteComment } from '../controllers/commentController.js';
 
 const router = express.Router();
 
@@ -35,9 +35,11 @@ router.delete('/:id/members/:userId', requireProjectRole('owner'), removeMember)
 router.get('/:id/versions', requireProjectRole(), listVersions);
 // Role check runs before multer so non-owners are rejected before any files save
 router.post('/:id/versions', uploadLimiter, requireProjectRole('owner'), handleUpload, uploadVersion);
+router.patch('/:id/versions/:versionId', requireProjectRole('owner'), loadVersion, updateVersion);
 
 router.get('/:id/versions/:versionId/comments', requireProjectRole(), loadVersion, listComments);
 router.post('/:id/versions/:versionId/comments', requireProjectRole('owner', 'reviewer'), loadVersion, createComment);
+router.patch('/:id/versions/:versionId/comments/:commentId', requireProjectRole(), loadVersion, loadComment, updateComment);
 router.delete('/:id/versions/:versionId/comments/:commentId', requireProjectRole(), loadVersion, loadComment, deleteComment);
 
 export default router;

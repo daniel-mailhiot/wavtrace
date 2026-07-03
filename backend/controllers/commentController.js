@@ -41,6 +41,29 @@ export const createComment = async (req, res) => {
   }
 };
 
+// PATCH /api/projects/:id/versions/:versionId/comments/:commentId
+export const updateComment = async (req, res) => {
+  try {
+    // Any member can reach this route but only the author can edit
+    if (!req.comment.authorId.equals(req.user._id)) {
+      return res.status(403).json({ message: 'Only the author can edit this comment' });
+    }
+
+    const { body } = req.body;
+    if (!body || !body.trim()) {
+      return res.status(400).json({ message: 'Comment text required' });
+    }
+
+    req.comment.body = body.trim();
+    await req.comment.save();
+    // Populate the author name so the response matches listComments
+    await req.comment.populate('authorId', 'name');
+    res.json(req.comment);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // DELETE /api/projects/:id/versions/:versionId/comments/:commentId
 export const deleteComment = async (req, res) => {
   try {
