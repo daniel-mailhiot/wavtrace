@@ -24,8 +24,8 @@ function LeaderRow({ label, value }) {
   );
 }
 
+// No entry for done. pill only shows while analysis is running or failed
 const STATUS_PILL = {
-  ready: { tone: 'ok', label: 'ready' },
   processing: { tone: 'warn', label: 'processing' },
   failed: { tone: 'bad', label: 'failed' },
 };
@@ -56,8 +56,8 @@ function ReadyMetrics({ version }) {
           <div key={h.k} style={{ background: 'var(--panel-2)', padding: '14px 16px' }}>
             <div className="faint mono" style={{ fontSize: 10.5, letterSpacing: '0.5px', textTransform: 'uppercase' }}>{h.k}</div>
             {h.chip ? (
-              <div style={{ marginTop: 8 }}>
-                <Pill tone={hero.clipping ? 'bad' : 'ok'}>{hero.clipping ? 'clipping' : 'no clipping'}</Pill>
+              <div className="mono" style={{ fontSize: 13, marginTop: 12, color: hero.clipping ? 'var(--bad)' : 'var(--ok)' }}>
+                {hero.clipping ? 'clipping' : 'no clipping'}
               </div>
             ) : (
               <div className="mono" style={{ fontSize: 24, marginTop: 6, color: h.tone === 'ok' ? 'var(--ok)' : 'var(--ink)', display: 'flex', alignItems: 'baseline', gap: 5 }}>
@@ -88,12 +88,12 @@ function ReadyMetrics({ version }) {
 
 export default function MetadataPanel({ version }) {
   const status = version?.status ?? 'ready';
-  const badge = STATUS_PILL[status] ?? STATUS_PILL.ready;
+  const badge = STATUS_PILL[status];
 
   return (
     <div>
       <Eyebrow style={{ marginBottom: 12 }}>
-        Audio metadata <Pill tone={badge.tone}>{badge.label}</Pill>
+        Audio metadata {badge && <Pill tone={badge.tone}>{badge.label}</Pill>}
       </Eyebrow>
 
       {status === 'processing' && (
