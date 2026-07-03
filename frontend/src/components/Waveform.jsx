@@ -147,11 +147,10 @@ export default function Waveform({
         )}
       </div>
 
-      <div className="note" style={{ marginTop: 12 }}>
-        {canComment
-          ? 'Click the waveform to seek and drop a comment marker, drag to select a region'
-          : 'Click the waveform to seek'}
-      </div>
+      {/* Commenters get a marker hint in the comments rail */}
+      {!canComment && (
+        <div className="note" style={{ marginTop: 12 }}>Click the waveform to seek</div>
+      )}
 
       <div style={{ height: 14 }} />
       <Transport

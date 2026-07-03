@@ -2,7 +2,7 @@ import ModalFrame from '../components/Modal/ModalFrame';
 import { ModalFoot } from '../components/Modal/ModalParts';
 import Button from '../components/Button';
 
-// Generic confirm dialog for destructive actions (currently project delete)
+// Generic confirm dialog for destructive actions (project and comment delete)
 export default function ConfirmDialog({ title, message, confirmLabel = 'Confirm', busy, onConfirm, onClose }) {
   return (
     <ModalFrame onClose={onClose} width={420}>

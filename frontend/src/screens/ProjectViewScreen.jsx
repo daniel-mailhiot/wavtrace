@@ -13,8 +13,8 @@ import initials from '../utils/initials';
 import relativeTime from '../utils/relativeTime';
 import formatTime from '../utils/formatTime';
 import { getProject, deleteProject, getCachedProject } from '../api/projects';
-import { listVersions, uploadVersion } from '../api/versions';
-import { listComments, createComment, deleteComment } from '../api/comments';
+import { listVersions, uploadVersion, updateVersionDescription } from '../api/versions';
+import { listComments, createComment, updateComment, deleteComment } from '../api/comments';
 import RenameProjectModal from '../modals/RenameProjectModal';
 import CollaboratorsModal from '../modals/CollaboratorsModal';
 import ConfirmDialog from '../modals/ConfirmDialog';
@@ -37,6 +37,7 @@ function adaptVersion(v, userId) {
     url: v.url,
     analysis: v.analysis,
     size: v.size,
+    description: v.description || '',
   };
 }
 
@@ -81,6 +82,8 @@ export default function ProjectViewScreen() {
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(null); // 'rename' | 'collab' | 'delete'
   const [deleting, setDeleting] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null); // comment id pending confirm
+  const [deletingComment, setDeletingComment] = useState(false);
 
   // Review and commenting state (waveform reached through wsRef)
   const [versions, setVersions] = useState([]);
@@ -213,18 +216,36 @@ export default function ProjectViewScreen() {
     }
   }
 
-  async function removeComment(commentId) {
+  // Throws on failure so the card's editor can show the error and stay open
+  async function editComment(commentId, body) {
+    const updated = await updateComment(id, currentId, commentId, body);
+    setComments((prev) => prev.map((c) => (c._id === commentId ? updated : c)));
+  }
+
+  // Runs after the confirm dialog, trash icon only sets commentToDelete
+  async function removeComment() {
+    setDeletingComment(true);
     try {
-      await deleteComment(id, currentId, commentId);
-      setComments((prev) => prev.filter((c) => c._id !== commentId));
-      setActiveId((cur) => (cur === commentId ? null : cur));
+      await deleteComment(id, currentId, commentToDelete);
+      setComments((prev) => prev.filter((c) => c._id !== commentToDelete));
+      setActiveId((cur) => (cur === commentToDelete ? null : cur));
     } catch (err) {
       console.error('Failed to delete comment:', err);
     }
+    setDeletingComment(false);
+    setCommentToDelete(null);
   }
 
-  async function handleUpload(file) {
-    const created = await uploadVersion(id, file);
+  // Rail's note editor saves through this so the versions state stays in sync
+  async function saveDescription(text) {
+    const updated = await updateVersionDescription(id, currentId, text);
+    setVersions((prev) =>
+      prev.map((v) => (v._id === currentId ? { ...v, description: updated.description } : v))
+    );
+  }
+
+  async function handleUpload(file, description) {
+    const created = await uploadVersion(id, file, description);
     audioUrlRef.current.set(created._id, URL.createObjectURL(file));
     await refreshVersions();
     selectVersion(created._id);
@@ -325,6 +346,9 @@ export default function ProjectViewScreen() {
           // Empty projects never fetch comments
           loading={!versionsLoaded || (Boolean(currentVersion) && commentsLoading)}
           hasVersion={Boolean(currentVersion)}
+          description={currentVersion?.description}
+          versionLabel={currentVersion?.v}
+          isOwner={isOwner}
           activeId={activeId}
           duration={dur}
           draft={draft}
@@ -334,7 +358,9 @@ export default function ProjectViewScreen() {
           onSelect={selectComment}
           onText={setText}
           onSubmit={addComment}
-          onDelete={removeComment}
+          onEdit={editComment}
+          onDelete={setCommentToDelete}
+          onSaveDescription={saveDescription}
         />
       </div>
 
@@ -371,6 +397,17 @@ export default function ProjectViewScreen() {
           busy={deleting}
           onConfirm={handleDelete}
           onClose={() => setModal(null)}
+        />
+      )}
+
+      {commentToDelete && (
+        <ConfirmDialog
+          title="Delete comment?"
+          message="Are you sure you want to delete this comment? This can't be undone."
+          confirmLabel="Delete comment"
+          busy={deletingComment}
+          onConfirm={removeComment}
+          onClose={() => setCommentToDelete(null)}
         />
       )}
     </>

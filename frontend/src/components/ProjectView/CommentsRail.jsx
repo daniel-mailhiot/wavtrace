@@ -1,8 +1,79 @@
+import { useState } from 'react';
 import Pill from '../Pill';
 import Button from '../Button';
 import { Avatar } from '../Avatar';
-import { TrashIcon } from '../icons';
+import { EditIcon, TrashIcon } from '../icons';
 import formatTime from '../../utils/formatTime';
+
+// Uploader's note for the selected version
+// Owner can add one after the fact or edit the existing one, everyone else just sees the text
+function VersionNote({ description, versionLabel, isOwner, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  // Nothing to show and no rights to add one
+  if (!description && !isOwner) return null;
+
+  function startEdit() {
+    setDraft(description);
+    setError('');
+    setEditing(true);
+  }
+
+  async function save() {
+    setBusy(true);
+    setError('');
+    try {
+      await onSave(draft.trim());
+      setEditing(false);
+    } catch (err) {
+      setError(err.message);
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line)' }}>
+      {(description || editing) && (
+        <div className="mono faint" style={{ fontSize: 11.5, marginBottom: 7 }}>{versionLabel} description</div>
+      )}
+
+      {editing ? (
+        <>
+          <textarea
+            className="wt-input"
+            rows={2}
+            maxLength={300}
+            autoFocus
+            value={draft}
+            disabled={busy}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Add a note for this version"
+          />
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 9 }}>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(false)}>Cancel</Button>
+            <Button size="sm" variant="primary" disabled={busy} onClick={save}>Save</Button>
+          </div>
+          {error && <div className="mono" style={{ fontSize: 12, color: 'var(--bad)', marginTop: 8 }}>{error}</div>}
+        </>
+      ) : description ? (
+        // Icon on the text row
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+          <p style={{ flex: 1, minWidth: 0, margin: 0, fontSize: 13, color: 'var(--ink-dim)', lineHeight: 1.5, overflowWrap: 'break-word', whiteSpace: 'pre-wrap' }}>{description}</p>
+          {isOwner && (
+            <button type="button" className="wt-cedit" aria-label="Edit description" onClick={startEdit}>
+              <EditIcon />
+            </button>
+          )}
+        </div>
+      ) : (
+        <button type="button" className="wt-note-btn" onClick={startEdit}>+ Add a note for {versionLabel}</button>
+      )}
+    </div>
+  );
+}
 
 // Comment's fraction to timecode, range for regions
 function timecode(comment, duration) {
@@ -13,10 +84,34 @@ function timecode(comment, duration) {
 }
 
 // Numbered node (circle for points, rounded square for regions)
-// Trash button only renders on the viewer's own comments (author-only delete)
-function CommentCard({ comment, active, duration, canDelete, onDelete, onClick }) {
+// Edit and trash buttons only render on the viewer's own comments (backend enforces author-only too)
+function CommentCard({ comment, active, duration, isAuthor, onEdit, onDelete, onClick }) {
   const isRegion = Boolean(comment.region);
   const time = timecode(comment, duration);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  function startEdit(e) {
+    e.stopPropagation();
+    setDraft(comment.text);
+    setError('');
+    setEditing(true);
+  }
+
+  async function save() {
+    setBusy(true);
+    setError('');
+    try {
+      await onEdit(comment.id, draft.trim());
+      setEditing(false);
+    } catch (err) {
+      setError(err.message);
+    }
+    setBusy(false);
+  }
+
   return (
     <div className={'wt-comment' + (active ? ' active' : '')} onClick={onClick}>
       <div className={'wt-cn' + (isRegion ? ' region' : '')}>{comment.n}</div>
@@ -26,22 +121,46 @@ function CommentCard({ comment, active, duration, canDelete, onDelete, onClick }
           <span className="wt-cwho">{comment.who}</span>
           <Pill tone="plain" style={{ marginLeft: 'auto' }}>{time}</Pill>
         </div>
-        <div className="wt-cfoot">
-          <div className="wt-ctext">{comment.text}</div>
-          {canDelete && (
-            <button
-              type="button"
-              className="wt-cdel"
-              aria-label="Delete comment"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(comment.id);
-              }}
-            >
-              <TrashIcon />
-            </button>
-          )}
-        </div>
+        {editing ? (
+          // So clicks inside the editor don't select the card and jump the playhead
+          <div onClick={(e) => e.stopPropagation()}>
+            <textarea
+              className="wt-input"
+              rows={2}
+              autoFocus
+              value={draft}
+              disabled={busy}
+              onChange={(e) => setDraft(e.target.value)}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+              <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(false)}>Cancel</Button>
+              <Button size="sm" variant="primary" disabled={busy || !draft.trim()} onClick={save}>Save</Button>
+            </div>
+            {error && <div className="mono" style={{ fontSize: 12, color: 'var(--bad)', marginTop: 6 }}>{error}</div>}
+          </div>
+        ) : (
+          <div className="wt-cfoot">
+            <div className="wt-ctext">{comment.text}</div>
+            {isAuthor && (
+              <>
+                <button type="button" className="wt-cedit" aria-label="Edit comment" onClick={startEdit}>
+                  <EditIcon />
+                </button>
+                <button
+                  type="button"
+                  className="wt-cdel"
+                  aria-label="Delete comment"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(comment.id);
+                  }}
+                >
+                  <TrashIcon />
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -89,7 +208,7 @@ function AddComment({ hasVersion, draft, text, duration, onText, onSubmit }) {
   );
 }
 
-export default function CommentsRail({ comments, loading, hasVersion, activeId, duration, draft, text, canComment, currentUserId, onSelect, onText, onSubmit, onDelete }) {
+export default function CommentsRail({ comments, loading, hasVersion, description, versionLabel, isOwner, activeId, duration, draft, text, canComment, currentUserId, onSelect, onText, onSubmit, onEdit, onDelete, onSaveDescription }) {
   return (
     <div className="wt-pv-rail">
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '16px 18px', borderBottom: '1px solid var(--line)' }}>
@@ -98,6 +217,17 @@ export default function CommentsRail({ comments, loading, hasVersion, activeId, 
         <span className="wt-grow" />
         <span className="mono faint" style={{ fontSize: 11.5 }}>by time ▾</span>
       </div>
+
+      {/* Key resets the editor state when the selected version changes */}
+      {hasVersion && (
+        <VersionNote
+          key={versionLabel}
+          description={description}
+          versionLabel={versionLabel}
+          isOwner={isOwner}
+          onSave={onSaveDescription}
+        />
+      )}
 
       <div className="wt-pv-rail-list" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 9 }}>
         {loading ? (
@@ -115,11 +245,21 @@ export default function CommentsRail({ comments, loading, hasVersion, activeId, 
               comment={c}
               active={activeId === c.id}
               duration={duration}
-              canDelete={c.author === currentUserId}
+              isAuthor={c.author === currentUserId}
+              onEdit={onEdit}
               onDelete={onDelete}
               onClick={() => onSelect(c)}
             />
           ))
+        )}
+
+        {/* How-to-comment hint, goes away once this user has commented on the version */}
+        {/* Dash gets its own flex column so wrapped lines stay aligned with the text */}
+        {!loading && hasVersion && canComment && !comments.some((c) => c.author === currentUserId) && (
+          <p className="mono faint" style={{ display: 'flex', gap: 6, margin: 0, paddingLeft: 9, fontSize: 13, lineHeight: 1.5 }}>
+            <span>-</span>
+            <span>Click the waveform to seek and drop a comment marker, drag to select a region</span>
+          </p>
         )}
       </div>
 

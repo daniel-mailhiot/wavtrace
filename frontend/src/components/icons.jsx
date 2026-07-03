@@ -59,6 +59,14 @@ export function PlusIcon() {
   );
 }
 
+export function EditIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" style={{ width: 13, height: 13 }}>
+      <path d="M11.5 2.5l2 2L5.2 12.8l-2.7.7.7-2.7zM9.9 4.1l2 2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function TrashIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" style={{ width: 13, height: 13 }}>
