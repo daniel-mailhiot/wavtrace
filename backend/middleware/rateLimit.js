@@ -16,13 +16,21 @@ export const apiLimiter = rateLimit({
   message: { message: 'Too many requests. Wait a minute and try again' },
 });
 
-// Incorect password on login and register
+// Incorect passwords on login
 export const authLimiter = rateLimit({
   ...baseOptions,
   windowMs: 15 * 60 * 1000,
   limit: 10,
   skipSuccessfulRequests: true,
   message: { message: 'Too many attempts. Wait 15 minutes and try again' },
+});
+
+// Register counts successes to prevent mass account creation
+export const registerLimiter = rateLimit({
+  ...baseOptions,
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message: { message: 'Too many registrations from this IP. Wait an hour and try again' },
 });
 
 // Tighter limit as every upload triggers ffmpeg analysis
