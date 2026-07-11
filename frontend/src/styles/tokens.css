@@ -31,9 +31,9 @@
   --accent-3-soft: rgba(126, 136, 234, 0.14);
   --accent-3-line: rgba(126, 136, 234, 0.25);
 
-  /* Purple for diff hunk header */
-  --diff-hunk: #a87bff;
-  --diff-hunk-soft: rgba(168, 123, 255, 0.07);
+  /* Diff hunk header, muted gray text (matches --ink-faint) on a faint blue row */
+  --diff-hunk: #b0b6c9;
+  --diff-hunk-soft: rgba(88, 166, 255, 0.07);
 
   /* note: Waveform.jsx applies color separately since a canvas can't read CSS vars */
 

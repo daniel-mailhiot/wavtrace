@@ -13,9 +13,10 @@ const BAR_GAP = 2;
 const BASELINE = '#565a67';
 const LOUDER = '#4fd763';
 const QUIETER = '#dc695a';
-const ADDED_BG = 'rgba(79, 215, 100, 0.04)';
+const ADDED = '#58a6ffc4';
+const ADDED_BG = 'rgba(88, 166, 255, 0.04)';
 const REMOVED_BG = 'rgba(220, 105, 90, 0.04)';
-const ADDED_EDGE = 'rgba(79, 215, 100, 0.1)';
+const ADDED_EDGE = 'rgba(88, 166, 255, 0.1)';
 const REMOVED_EDGE = 'rgba(220, 105, 90, 0.1)';
 
 export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, height = 160 }) {
@@ -160,7 +161,7 @@ export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, he
         } else {
           // Audio that exists on one side only draws as a full colored bar
           const v = (s.v / max) * cap;
-          fillBar(ctx, x, mid - v, v * 2, s.type === 'added' ? LOUDER : QUIETER);
+          fillBar(ctx, x, mid - v, v * 2, s.type === 'added' ? ADDED : QUIETER);
         }
       }
 
