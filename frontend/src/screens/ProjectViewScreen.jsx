@@ -244,8 +244,8 @@ export default function ProjectViewScreen() {
     );
   }
 
-  async function handleUpload(file, description) {
-    const created = await uploadVersion(id, file, description);
+  async function handleUpload(file, description, edits) {
+    const created = await uploadVersion(id, file, description, edits);
     audioUrlRef.current.set(created._id, URL.createObjectURL(file));
     await refreshVersions();
     selectVersion(created._id);

@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import ModalFrame from '../components/Modal/ModalFrame';
 import { ModalHead, ModalFoot } from '../components/Modal/ModalParts';
 import Button from '../components/Button';
+import Select from '../components/Select';
 import { UploadIcon } from '../components/icons';
 
 const ALLOWED = ['wav', 'mp3', 'flac'];
@@ -115,10 +116,178 @@ function SelectedFile({ file, description, busy, onDescription, onRemove }) {
   );
 }
 
+const MARK_TYPES = [
+  { id: 'added', label: 'Added' },
+  { id: 'removed', label: 'Removed' },
+];
+
+// m:ss.mmm, m:ss or plain seconds
+function parseTimecode(str) {
+  const m = str.trim().match(/^(?:(\d+):)?(\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  const min = m[1] ? parseInt(m[1], 10) : 0;
+  const sec = parseFloat(m[2]);
+  if (m[1] && sec >= 60) return null;
+  return min * 60 + sec;
+}
+
+// '5' = bar 5, '5.3' = bar 5 beat 3 (4/4)
+function parseBarBeat(str) {
+  const m = str.trim().match(/^(\d+)(?:\.([1-4]))?$/);
+  if (!m) return null;
+  const bar = parseInt(m[1], 10);
+  if (bar < 1) return null;
+  return { bar, beat: m[2] ? parseInt(m[2], 10) : null };
+}
+
+// Marks read as inclusive ranges ("5 to 8" covers bars 5 through 8),
+// so from = start of the named unit and to = end of it
+function barBeatRange(fromStr, toStr, barLen) {
+  const from = parseBarBeat(fromStr);
+  const to = parseBarBeat(toStr);
+  if (!from || !to) return null;
+  const beatLen = barLen / 4;
+  const start = (from.bar - 1) * barLen + ((from.beat ?? 1) - 1) * beatLen;
+  const end = to.beat == null ? to.bar * barLen : (to.bar - 1) * barLen + to.beat * beatLen;
+  return end > start ? { start, end } : null;
+}
+
+const fmtSec = (s) => `${Math.floor(s / 60)}:${(s % 60).toFixed(3).padStart(6, '0')}`;
+
+const linkStyle = {
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  cursor: 'pointer',
+  fontFamily: 'var(--mono)',
+  fontSize: 11.5,
+  color: 'var(--ink-faint)',
+  textAlign: 'left',
+};
+
+// Compact rows for marking added/removed sections, collapsed to one line until used
+function SectionMarks({ marks, units, bpm, busy, setMarks, setUnits, setBpm }) {
+  const setRow = (i, patch) => setMarks(marks.map((m, idx) => (idx === i ? { ...m, ...patch } : m)));
+  const addRow = () => setMarks([...marks, { type: 'added', from: '', to: '' }]);
+  const removeRow = (i) => setMarks(marks.filter((_, idx) => idx !== i));
+
+  if (!marks.length) {
+    return (
+      <button type="button" style={{ ...linkStyle, marginTop: 12 }} onClick={addRow} disabled={busy}>
+        + Mark an added/removed section (optional)
+      </button>
+    );
+  }
+
+  const colLabel = (text) => (
+    <span className="mono faint" style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>{text}</span>
+  );
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span className="wt-eyebrow" style={{ margin: 0 }}>Section changes</span>
+        <span className="wt-grow" />
+        <div style={{ display: 'inline-flex', border: '1px solid var(--line)', borderRadius: 6, overflow: 'hidden' }}>
+          {[['time', 'time'], ['bars', 'bars']].map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              disabled={busy}
+              onClick={() => setUnits(id)}
+              style={{
+                padding: '3px 10px', fontSize: 11, fontFamily: 'var(--mono)', border: 'none', cursor: 'pointer',
+                background: units === id ? 'var(--accent-soft)' : 'transparent',
+                color: units === id ? 'var(--accent)' : 'var(--ink-faint)',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {units === 'bars' && (
+          <input
+            className="wt-input mono"
+            value={bpm}
+            disabled={busy}
+            placeholder="BPM"
+            onChange={(e) => setBpm(e.target.value)}
+            style={{ width: 56, fontSize: 12, padding: '4px 8px' }}
+          />
+        )}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '104px 1fr 1fr 28px', gap: 8, marginTop: 10, alignItems: 'center' }}>
+        <span />
+        {colLabel('From')}
+        {colLabel('To')}
+        <span />
+        {marks.map((m, i) => {
+          // live conversion so a misread range is visible before uploading
+          const bpmNum = parseFloat(bpm);
+          const range = units === 'bars' && bpmNum >= 20 && bpmNum <= 400
+            ? barBeatRange(m.from, m.to, 240 / bpmNum)
+            : null;
+          return (
+            <Fragment key={i}>
+              <Select value={m.type} options={MARK_TYPES} onChange={(t) => setRow(i, { type: t })} width={104} />
+              <input
+                className="wt-input mono"
+                value={m.from}
+                disabled={busy}
+                placeholder={units === 'time' ? '0:07.5' : '5'}
+                onChange={(e) => setRow(i, { from: e.target.value })}
+                style={{ fontSize: 12.5, padding: '7px 9px' }}
+              />
+              <input
+                className="wt-input mono"
+                value={m.to}
+                disabled={busy}
+                placeholder={units === 'time' ? '0:15.0' : '8'}
+                onChange={(e) => setRow(i, { to: e.target.value })}
+                style={{ fontSize: 12.5, padding: '7px 9px' }}
+              />
+              <button
+                type="button"
+                aria-label="Remove mark"
+                onClick={() => !busy && removeRow(i)}
+                style={{ width: 28, height: 28, border: '1px solid var(--line)', background: 'var(--panel-2)', color: 'var(--ink-faint)', borderRadius: 6, cursor: 'pointer', fontSize: 14, lineHeight: 1 }}
+              >
+                ×
+              </button>
+              {range && (
+                <span className="mono faint" style={{ gridColumn: '2 / 4', fontSize: 10, marginTop: -4 }}>
+                  = {fmtSec(range.start)} – {fmtSec(range.end)}
+                </span>
+              )}
+            </Fragment>
+          );
+        })}
+      </div>
+
+      <button type="button" style={{ ...linkStyle, marginTop: 10 }} onClick={addRow} disabled={busy}>
+        + add another
+      </button>
+      <p className="mono faint" style={{ fontSize: 10.5, lineHeight: 1.55, margin: '8px 0 0' }}>
+        Added = where it sits in this file. Removed = where it was in the previous version.
+        {units === 'bars' && (
+          <>
+            <br />
+            Ranges include both ends: 5 to 8 covers bars 5–8. Beats go after a dot (5.3 = bar 5, beat 3). 4/4 assumed.
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
 export default function UploadVersionModal({ versions, projectName, onClose, onUpload }) {
   const { user } = useAuth();
   const [file, setFile] = useState(null);
   const [description, setDescription] = useState('');
+  const [marks, setMarks] = useState([]);
+  const [units, setUnits] = useState('time');
+  const [bpm, setBpm] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const isFirst = versions.length === 0;
@@ -135,11 +304,44 @@ export default function UploadVersionModal({ versions, projectName, onClose, onU
     setFile(picked);
   }
 
+  // Marks convert to seconds here so the server only ever sees one format
+  function buildEdits() {
+    const rows = marks.filter((m) => m.from.trim() || m.to.trim());
+    if (!rows.length) return [];
+    const bpmNum = parseFloat(bpm);
+    if (units === 'bars' && !(bpmNum >= 20 && bpmNum <= 400)) {
+      throw new Error('Bars mode needs a BPM between 20 and 400.');
+    }
+    const barLen = 240 / bpmNum; // 4/4 assumed
+    return rows.map((m) => {
+      if (units === 'time') {
+        const start = parseTimecode(m.from);
+        const end = parseTimecode(m.to);
+        if (start == null || end == null || end <= start) {
+          throw new Error('Marks need a valid time range, like 0:07.5 to 0:15.');
+        }
+        return { type: m.type, start, end };
+      }
+      const range = barBeatRange(m.from, m.to, barLen);
+      if (!range) {
+        throw new Error('Marks need a bar range like 5 to 8, or bar.beat like 5.3.');
+      }
+      return { type: m.type, start: range.start, end: range.end };
+    });
+  }
+
   async function submit() {
+    let edits;
+    try {
+      edits = buildEdits();
+    } catch (err) {
+      setError(err.message);
+      return;
+    }
     setBusy(true);
     setError('');
     try {
-      await onUpload(file, description.trim());
+      await onUpload(file, description.trim(), edits);
     } catch (err) {
       setError(err.message);
       setBusy(false);
@@ -159,13 +361,26 @@ export default function UploadVersionModal({ versions, projectName, onClose, onU
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           {file ? (
-            <SelectedFile
-              file={file}
-              description={description}
-              busy={busy}
-              onDescription={setDescription}
-              onRemove={() => !busy && setFile(null)}
-            />
+            <>
+              <SelectedFile
+                file={file}
+                description={description}
+                busy={busy}
+                onDescription={setDescription}
+                onRemove={() => !busy && setFile(null)}
+              />
+              {!isFirst && (
+                <SectionMarks
+                  marks={marks}
+                  units={units}
+                  bpm={bpm}
+                  busy={busy}
+                  setMarks={setMarks}
+                  setUnits={setUnits}
+                  setBpm={setBpm}
+                />
+              )}
+            </>
           ) : (
             <DropZone onPick={pick} />
           )}
