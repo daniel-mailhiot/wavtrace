@@ -52,8 +52,31 @@ export const uploadVersion = async (req, res) => {
       return res.status(400).json({ message: 'Description is too long (max 300 characters)' });
     }
 
+    // Optional section marks for the diff view, sent as JSON since multipart fields are strings
+    let edits = [];
+    if (req.body.edits) {
+      try {
+        edits = JSON.parse(req.body.edits);
+      } catch {
+        edits = null;
+      }
+      const bad = !Array.isArray(edits) || edits.length > 20 || edits.some(
+        (e) => !['added', 'removed'].includes(e?.type)
+          || !Number.isFinite(e?.start) || !Number.isFinite(e?.end)
+          || e.start < 0 || e.end <= e.start
+      );
+      if (bad) {
+        await unlink(req.file.path).catch(() => {});
+        return res.status(400).json({ message: 'Invalid section marks' });
+      }
+      // keep only the known fields
+      edits = edits.map((e) => ({ type: e.type, start: e.start, end: e.end }));
+    }
+
     const latest = await Version.findOne({ projectId: req.project._id }).sort({ versionNumber: -1 });
     const versionNumber = latest ? latest.versionNumber + 1 : 1;
+    // marks describe a change from the previous version so v1 can't have any
+    if (versionNumber === 1) edits = [];
 
     // Only allowlisted accounts keep the file in R2 and everyone else gets analysis only
     let fileKey = null;
@@ -80,6 +103,7 @@ export const uploadVersion = async (req, res) => {
       size: req.file.size,
       mimeType: req.file.mimetype,
       description,
+      edits,
       analysisStatus: 'processing',
     });
 
