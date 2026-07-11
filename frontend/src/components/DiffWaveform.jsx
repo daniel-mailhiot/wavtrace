@@ -18,14 +18,10 @@ const REMOVED_BG = 'rgba(220, 105, 90, 0.07)';
 const ADDED_EDGE = 'rgba(79, 215, 100, 0.3)';
 const REMOVED_EDGE = 'rgba(220, 105, 90, 0.3)';
 
-export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, onSections, height = 160 }) {
+export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, height = 160 }) {
   const wrapRef = useRef(null);
   const canvasRef = useRef(null);
   const [peaks, setPeaks] = useState(null);
-
-  // Ref keeps the callback out of effect deps so redraws don't loop
-  const onSectionsRef = useRef(onSections);
-  onSectionsRef.current = onSections;
 
   // Runs once per mount because DiffScreen keys this by version pair
   useEffect(() => {
@@ -45,15 +41,6 @@ export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, on
       ? segmentsFromEdits(edits, peaks.base.duration, peaks.cmp.duration)
       : alignEnvelopes(peaks.base, peaks.cmp);
   }, [peaks, edits]);
-
-  // Let the screen know which legend entries apply
-  useEffect(() => {
-    if (!segments) return;
-    onSectionsRef.current?.({
-      added: segments.some((s) => s.type === 'added'),
-      removed: segments.some((s) => s.type === 'removed'),
-    });
-  }, [segments]);
 
   // Redraw on load and whenever the container resizes
   useEffect(() => {

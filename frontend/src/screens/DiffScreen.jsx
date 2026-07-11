@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import AppBar from '../components/AppBar';
 import ErrorCard from '../components/ErrorCard';
@@ -61,8 +61,8 @@ function PendingDiff({ version }) {
   );
 }
 
-// Color key for the overlay, section entries appear only when detected
-function Legend({ bVer, sections }) {
+// Color key for the overlay
+function Legend({ bVer }) {
   const item = (label, swatch) => (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
       <span style={{ width: 10, height: 10, borderRadius: 2, ...swatch }} />
@@ -71,11 +71,8 @@ function Legend({ bVer, sections }) {
   );
   return (
     <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-      {item('shared overlap', { background: '#565a67' })}
       {item(`${bVer} louder`, { background: 'var(--ok)' })}
       {item(`${bVer} quieter`, { background: 'var(--bad)' })}
-      {sections?.added && item('section added', { background: 'rgba(79, 215, 100, 0.15)', border: '1px solid #4fd764' })}
-      {sections?.removed && item('section removed', { background: 'rgba(220, 105, 90, 0.15)', border: '1px solid #dc695a' })}
     </div>
   );
 }
@@ -177,7 +174,6 @@ export default function DiffScreen() {
   const [error, setError] = useState(null); // the versions fetch fails with 403/404 for non-members
   const [aId, setAId] = useState(null);
   const [bId, setBId] = useState(null);
-  const [sections, setSections] = useState(null); // which legend entries the overlay needs
 
   // Breadcrumb name only
   useEffect(() => {
@@ -196,11 +192,6 @@ export default function DiffScreen() {
       .finally(() => setVersionsLoaded(true));
   }, [id]);
 
-  // Stale legend entries shouldn't linger while the next pair decodes
-  useEffect(() => {
-    setSections(null);
-  }, [aId, bId]);
-
   const options = versions.map((v) => ({ id: v._id, label: `v${v.versionNumber}` }));
   const aVersion = versions.find((v) => v._id === aId) ?? null;
   const bVersion = versions.find((v) => v._id === bId) ?? null;
@@ -218,11 +209,6 @@ export default function DiffScreen() {
     }
     return null;
   }, [aVersion, bVersion]);
-
-  // Same-value updates bail out so the overlay callback can't loop renders
-  const handleSections = useCallback((s) => {
-    setSections((prev) => (prev?.added === s.added && prev?.removed === s.removed ? prev : s));
-  }, []);
 
   // Waveforms draw from peak data but the metadata diff needs both sides analyzed
   const ready = (v) => v?.analysisStatus === 'ready';
@@ -261,11 +247,11 @@ export default function DiffScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                   <Eyebrow style={{ margin: 0 }}>Waveform overlay</Eyebrow>
                   <span className="wt-grow" />
-                  {missingAudio.length === 0 && <Legend bVer={vlabel(bVersion)} sections={sections} />}
+                  {missingAudio.length === 0 && <Legend bVer={vlabel(bVersion)} />}
                 </div>
                 {missingAudio.length === 0 ? (
                   // Key remounts the waveform to keep stale bars from showing while a new pair decodes
-                  <DiffWaveform key={aId + bId} baselineUrl={aVersion.url} compareUrl={bVersion.url} edits={manualEdits} onSections={handleSections} />
+                  <DiffWaveform key={aId + bId} baselineUrl={aVersion.url} compareUrl={bVersion.url} edits={manualEdits} />
                 ) : (
                   <MissingAudioNotice labels={missingAudio.map(vlabel)} />
                 )}
