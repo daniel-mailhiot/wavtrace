@@ -3,6 +3,8 @@
 import formatTime from './formatTime';
 
 const round1 = (n) => Math.round(n * 10) / 10;
+// Cut to 3 decimals without rounding
+const trunc3 = (n) => Math.trunc(n * 1000) / 1000;
 // Unicode minus (U+2212) so deltas line up with the '+' sign
 const signed = (n) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 
@@ -16,7 +18,7 @@ const METRICS = [
   {
     k: 'Duration', unit: '',
     value: (v) => formatTime(v.duration),
-    delta: (a, b) => ({ text: `${signed(b.duration - a.duration)}s`, tone: 'dim' }),
+    delta: (a, b) => ({ text: `${signed(trunc3(b.duration - a.duration))}s`, tone: 'dim' }),
   },
   {
     k: 'True peak', unit: 'dB',
