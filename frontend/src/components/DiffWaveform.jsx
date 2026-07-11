@@ -11,12 +11,12 @@ const BAR_WIDTH = 2.5;
 const BAR_GAP = 2;
 
 const BASELINE = '#565a67';
-const LOUDER = '#4fd764';
+const LOUDER = '#4fd763';
 const QUIETER = '#dc695a';
-const ADDED_BG = 'rgba(79, 215, 100, 0.07)';
-const REMOVED_BG = 'rgba(220, 105, 90, 0.07)';
-const ADDED_EDGE = 'rgba(79, 215, 100, 0.3)';
-const REMOVED_EDGE = 'rgba(220, 105, 90, 0.3)';
+const ADDED_BG = 'rgba(79, 215, 100, 0.04)';
+const REMOVED_BG = 'rgba(220, 105, 90, 0.04)';
+const ADDED_EDGE = 'rgba(79, 215, 100, 0.1)';
+const REMOVED_EDGE = 'rgba(220, 105, 90, 0.1)';
 
 export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, height = 160 }) {
   const wrapRef = useRef(null);
@@ -164,7 +164,7 @@ export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, he
           seg.type === 'added'
             ? `+${seg.dur.toFixed(1)}s added`
             : `−${seg.dur.toFixed(1)}s removed`;
-        ctx.fillStyle = seg.type === 'added' ? LOUDER : QUIETER;
+        ctx.fillStyle = '#ffffffcb';
         ctx.fillText(label, seg.start * pxPerSec + 5, 5);
       }
     };
