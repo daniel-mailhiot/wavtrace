@@ -19,6 +19,8 @@ const COST_WIN = 1;        // frames of context around each point when comparing
 const LEVEL_W = 0.6;       // weight of the loudness-difference term, spectra alone are
                            // loudness-blind and happily match a quiet tail to loud bars
 const MIN_SECTION = 0.6;   // added/removed blips shorter than this fold into the match around them
+const NOVELTY_W = 0.3;     // how strongly section boundaries prefer onset spikes
+const CORRIDOR = 3;        // seconds a section may slide during refinement
 
 // Auto-detect added/removed sections from the two decoded clips
 export function alignEnvelopes(a, b) {
@@ -31,7 +33,8 @@ export function alignEnvelopes(a, b) {
   const sa = featuresAtRate(a, rate);
   const sb = featuresAtRate(b, rate);
   const ops = traceAlignment(sa, sb);
-  return foldTinySections(opsToSegments(ops, rate, a.duration, b.duration));
+  const segs = foldTinySections(opsToSegments(ops, rate, a.duration, b.duration));
+  return refineSections(segs, a, b);
 }
 
 // Build segments straight from uploader marks instead of guessing
@@ -371,6 +374,96 @@ function foldTinySections(segs) {
   }
   if (carry) out.push(carry);
   return out;
+}
+
+// The DP only finds *a* cheapest path. Looped music makes many paths nearly
+// tie, so a section can slide inside a self-similar stretch and still look
+// optimal. This pass re-anchors each section by sliding it within a corridor
+// and preferring spots where the matched frames agree and the gap side has an
+// onset spike, a real edit boundary lands on a transient while a slid one
+// lands mid-note
+function refineSections(segs, envA, envB) {
+  if (!envA.novelty || !envB.novelty) return segs;
+  const rate = envA.featureRate;
+  const fa = featuresAtRate(envA, rate);
+  const fb = featuresAtRate(envB, rate);
+
+  for (let i = 0; i < segs.length; i++) {
+    const sec = segs[i];
+    if (sec.type === 'match') continue;
+    const m1 = segs[i - 1];
+    const m2 = segs[i + 1];
+    // only sections between two matches can slide, edge sections have no corridor
+    if (m1?.type !== 'match' || m2?.type !== 'match') continue;
+
+    // "other" = the file without the extra material, "gap" = the one with it
+    const added = sec.type === 'added';
+    const other = added ? fa : fb;
+    const gap = added ? fb : fa;
+    const nov = added ? envB.novelty : envA.novelty;
+
+    // frame domain on the other timeline, matches map other[i] -> gap[i + off]
+    const A0 = Math.round((added ? m1.aEnd : m1.bEnd) * rate);
+    const g0 = Math.round((added ? sec.bStart : sec.aStart) * rate);
+    const g1 = Math.round((added ? sec.bEnd : sec.aEnd) * rate);
+    const off1 = g0 - A0;
+    const off2 = off1 + (g1 - g0);
+
+    const maxShift = Math.round(CORRIDOR * rate);
+    const lo = -Math.min(maxShift, Math.round((m1.aEnd - m1.aStart) * rate));
+    const hi = Math.min(maxShift, Math.round((m2.aEnd - m2.aStart) * rate));
+
+    // onset bonus at the two splice points the shifted section would create
+    const noveltyAt = (s) => -NOVELTY_W * ((nov[g0 + s] ?? 0) + (nov[g1 + s] ?? 0));
+
+    // walk outward accumulating the match-cost change of each extra frame moved
+    let best = 0;
+    let bestScore = noveltyAt(0);
+    let acc = 0;
+    for (let s = 1; s <= hi; s++) {
+      const f = A0 + s - 1;
+      acc += pairAt(other, gap, f, f + off1) - pairAt(other, gap, f, f + off2);
+      const score = acc + noveltyAt(s);
+      if (score < bestScore) {
+        bestScore = score;
+        best = s;
+      }
+    }
+    acc = 0;
+    for (let s = -1; s >= lo; s--) {
+      const f = A0 + s;
+      acc += pairAt(other, gap, f, f + off2) - pairAt(other, gap, f, f + off1);
+      const score = acc + noveltyAt(s);
+      if (score < bestScore) {
+        bestScore = score;
+        best = s;
+      }
+    }
+    if (!best) continue;
+
+    // slide the section, the match before grows/shrinks and the one after does the opposite
+    const d = best / rate;
+    m1.aEnd += d;
+    m1.bEnd += d;
+    m2.aStart += d;
+    m2.bStart += d;
+    if (added) {
+      sec.bStart += d;
+      sec.bEnd += d;
+    } else {
+      sec.aStart += d;
+      sec.aEnd += d;
+    }
+  }
+
+  // a full-corridor slide can shrink a neighbouring match to nothing
+  return segs.filter((s) => s.type !== 'match' || s.aEnd - s.aStart > 0.01);
+}
+
+// Single-frame cost with a bounds guard, refinement wants sharp edges so no window
+function pairAt(sa, sb, i, j) {
+  if (i < 0 || j < 0 || i >= sa.frames || j >= sb.frames) return 1;
+  return pairCost(sa, sb, i, j);
 }
 
 // Clamp to the clip, drop nonsense, merge overlaps

@@ -88,6 +88,9 @@ export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, he
         const tMid = (t0 + t1) / 2;
         while (si < laid.length - 1 && tMid > laid[si].start + laid[si].dur) si++;
         const seg = laid[si];
+        // Remember which bars each segment owns so the tint can snap to them
+        if (seg.firstBar === undefined) seg.firstBar = i;
+        seg.lastBar = i;
         const f0 = Math.max(0, (t0 - seg.start) / seg.dur);
         const f1 = Math.min(1, (t1 - seg.start) / seg.dur);
 
@@ -116,15 +119,23 @@ export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, he
       const cap = mid - 4; // leave a little room top and bottom
 
       // Faint tint and edge lines behind added/removed stretches
+      // Snapped to the bars the section owns so a bar never sits half outside
+      // its own tint (bars pick their segment by midpoint, not exact pixels)
       for (const seg of laid) {
         if (seg.type === 'match') continue;
-        const x0 = seg.start * pxPerSec;
-        const segW = seg.dur * pxPerSec;
+        let x0 = seg.start * pxPerSec;
+        let x1 = x0 + seg.dur * pxPerSec;
+        if (seg.firstBar !== undefined) {
+          x0 = Math.max(0, seg.firstBar * (BAR_WIDTH + BAR_GAP) - BAR_GAP / 2);
+          x1 = Math.min(width, seg.lastBar * (BAR_WIDTH + BAR_GAP) + BAR_WIDTH + BAR_GAP / 2);
+        }
+        seg.tintX0 = x0;
+        seg.tintW = x1 - x0;
         ctx.fillStyle = seg.type === 'added' ? ADDED_BG : REMOVED_BG;
-        ctx.fillRect(x0, 0, segW, height);
+        ctx.fillRect(x0, 0, x1 - x0, height);
         ctx.fillStyle = seg.type === 'added' ? ADDED_EDGE : REMOVED_EDGE;
         ctx.fillRect(x0, 0, 1, height);
-        ctx.fillRect(x0 + segW - 1, 0, 1, height);
+        ctx.fillRect(x1 - 1, 0, 1, height);
       }
 
       for (let i = 0; i < bars; i++) {
@@ -158,14 +169,13 @@ export default function DiffWaveform({ baselineUrl, compareUrl, edits = null, he
       ctx.textBaseline = 'top';
       for (const seg of laid) {
         if (seg.type === 'match') continue;
-        const segW = seg.dur * pxPerSec;
-        if (segW < 64) continue;
+        if ((seg.tintW ?? 0) < 64) continue;
         const label =
           seg.type === 'added'
             ? `+${seg.dur.toFixed(1)}s added`
             : `−${seg.dur.toFixed(1)}s removed`;
         ctx.fillStyle = '#ffffffcb';
-        ctx.fillText(label, seg.start * pxPerSec + 5, 5);
+        ctx.fillText(label, seg.tintX0 + 5, 5);
       }
     };
 

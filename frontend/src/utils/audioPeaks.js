@@ -9,7 +9,7 @@ const PEAKS_PER_SEC = 50;
 // "same bar with a new layer" from "different bar of the same loop"
 const FEATURE_RATE = 10; // frames per second
 const FFT_SIZE = 2048;
-const BAND_COUNT = 12;
+const BAND_COUNT = 24; // 12 was too coarse for the aligner's onset anchoring
 const BAND_LO = 60; // Hz
 const BAND_HI = 8000;
 
@@ -30,6 +30,14 @@ export async function getPeaks(url) {
   const res = await fetch(url);
   const buffer = await getCtx().decodeAudioData(await res.arrayBuffer());
 
+  const result = envelopeFromBuffer(buffer);
+  cache.set(url, result);
+  return result;
+}
+
+// Pure part split from getPeaks so Node tests can feed decoded samples in
+// without a browser AudioContext
+export function envelopeFromBuffer(buffer) {
   const buckets = Math.max(1, Math.ceil(buffer.duration * PEAKS_PER_SEC));
   const peaks = new Float32Array(buckets);
   const step = buffer.length / buckets;
@@ -49,20 +57,19 @@ export async function getPeaks(url) {
   }
   for (let i = 0; i < buckets; i++) peaks[i] /= buffer.numberOfChannels;
 
-  const features = spectralFeatures(buffer);
+  const { features, novelty } = spectralFeatures(buffer);
   const levels = frameLevels(peaks, buffer.duration);
 
-  const result = {
+  return {
     peaks,
     rate: PEAKS_PER_SEC,
     duration: buffer.duration,
     features,
+    novelty,
     levels,
     featureRate: FEATURE_RATE,
     bandCount: BAND_COUNT,
   };
-  cache.set(url, result);
-  return result;
 }
 
 // Per-feature-frame loudness, normalized per file (95th percentile = 1)
@@ -100,6 +107,8 @@ export function peakInRange(env, startSec, endSec) {
 
 // Per-frame band energies, compressed then unit-length so overall loudness
 // drops out and only the frequency balance is compared
+// Also returns a novelty curve (spectral flux), real edit splices land on a
+// transient so the aligner uses the spikes to anchor section boundaries
 function spectralFeatures(buffer) {
   const sr = buffer.sampleRate;
   const mono = new Float32Array(buffer.length);
@@ -114,6 +123,8 @@ function spectralFeatures(buffer) {
   const hop = sr / FEATURE_RATE;
   const frames = Math.max(1, Math.round(buffer.duration * FEATURE_RATE));
   const features = new Float32Array(frames * BAND_COUNT);
+  const novelty = new Float32Array(frames);
+  const prevBands = new Float32Array(BAND_COUNT);
 
   const hann = new Float32Array(FFT_SIZE);
   for (let i = 0; i < FFT_SIZE; i++) {
@@ -139,6 +150,7 @@ function spectralFeatures(buffer) {
     fft(re, im);
 
     let norm = 0;
+    let flux = 0;
     for (let b = 0; b < BAND_COUNT; b++) {
       let energy = 0;
       for (let k = edges[b]; k < Math.max(edges[b + 1], edges[b] + 1); k++) {
@@ -148,14 +160,25 @@ function spectralFeatures(buffer) {
       const v = Math.pow(energy, 0.25);
       features[f * BAND_COUNT + b] = v;
       norm += v * v;
+      // flux before normalization, onsets show as energy rising in some band
+      const rise = v - prevBands[b];
+      if (rise > 0) flux += rise;
+      prevBands[b] = v;
     }
+    if (f > 0) novelty[f] = flux;
     norm = Math.sqrt(norm);
     if (norm > 1e-6) {
       for (let b = 0; b < BAND_COUNT; b++) features[f * BAND_COUNT + b] /= norm;
     }
     // near-silent frames stay zero vectors and the aligner treats them as quiet
   }
-  return features;
+
+  // normalized per file so the aligner's novelty weight means the same everywhere
+  const sorted = Array.from(novelty).sort((x, y) => x - y);
+  const ref = sorted[Math.floor(sorted.length * 0.95)] || 1;
+  for (let f = 0; f < frames; f++) novelty[f] = Math.min(novelty[f] / ref, 1.5);
+
+  return { features, novelty };
 }
 
 // In-place iterative radix-2 FFT
